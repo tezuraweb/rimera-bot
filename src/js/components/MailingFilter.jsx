@@ -99,8 +99,13 @@ const MailingFilter = ({ filterType, data, updateHandler }) => {
 
     const selectParent = async (id, index) => {
         if (filterType == 'department') {
-            setParentDep(id);
-            setParentIndex(index);
+            if (parentDep == id) {
+                setParentDep(0);
+                setParentIndex(-1);
+            } else {
+                setParentDep(id);
+                setParentIndex(index);
+            }
         }
     };
 
