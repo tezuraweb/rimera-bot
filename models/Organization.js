@@ -10,6 +10,18 @@ class Organization {
         return this.db.select('id', 'name')
             .from(this.tableName);
     }
+
+    getByIds(ids) {
+        return this.db.select('id', 'name')
+            .from(this.tableName)
+            .whereIn('id', ids);
+    }
+
+    searchAll(query) {
+        return this.db.select('id', 'name')
+            .from(this.tableName)
+            .whereILike('name', `%${query}%`);
+    }
 }
 
 module.exports = new Organization();

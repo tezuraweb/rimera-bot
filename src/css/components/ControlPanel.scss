@@ -1,0 +1,66 @@
+.control {
+    margin-bottom: 50px;
+
+    &__wrapper {
+        width: 100%;
+        max-width: 750px;
+        border: 2px solid $lightBlue;
+        padding: 15px;
+        margin: 0 auto;
+    }
+
+    &__title {
+        margin-bottom: 20px;
+    }
+
+    &__link {
+        margin-bottom: 20px;
+    }
+
+    &__text {
+        width: 100%;
+        padding: 10px;
+    }
+    
+    &__images {
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+
+        &--item {
+            flex-basis: 33.33333%;
+        }
+    }
+
+    &__button {
+        display: block;
+        margin: 0 auto;
+    }
+
+    &__name {
+        margin-bottom: 20px;
+    }
+
+    &__row {
+        display: flex;
+
+        &--item {
+            margin-right: 5px;
+
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+    }
+
+    &__checkbox, &__radio {
+        margin-bottom: 20px;
+
+        &--label {
+            margin-right: 15px;
+        }
+
+        &--item {
+            margin-right: 5px;
+        }
+    }
+}

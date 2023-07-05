@@ -1,0 +1,41 @@
+.list {
+    margin-bottom: 30px;
+
+    &__wrapper {
+        width: 100%;
+        max-width: 450px;
+        height: 500px;
+        overflow-y: scroll;
+        border: 2px solid $lightBlue;
+        margin: 0 auto 20px;
+    }
+
+    &__button {
+        display: block;
+        margin: 0 auto;
+
+        &--right {
+            margin-left: auto;
+        }
+
+        &--outer {
+            margin-bottom: 30px;
+        }
+    }
+
+    &__item {
+        border-bottom: 2px solid $lightBlue;
+        padding: 15px;
+    }
+
+    &__text {
+        background-color: $grey;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 15px;
+    }
+
+    &__row {
+        display: flex;
+    }
+}

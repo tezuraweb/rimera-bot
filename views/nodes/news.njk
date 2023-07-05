@@ -1,0 +1,17 @@
+{% set pageTitle = 'Новости' %}
+
+{% extends "layouts/default.njk" %}
+
+{% block bodyContent %}
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <h1 class="section__title">Новости</h1>
+
+                <div class="news" data-react-component="NewsComponent"></div>
+            </div>
+        </section>
+    </main>
+
+{% endblock %}

@@ -1,0 +1,141 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    // -webkit-appearance: none;
+    // -webkit-text-size-adjust: none;
+}
+  
+html {
+    -ms-text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+    background-color: $white;
+}
+  
+body {
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: "Roboto", sans-serif;
+    background: $white;
+    color: $black;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 22px;
+    min-width: $containerMinWidth;
+    overflow-x: hidden;
+    overflow-anchor: none;
+}
+  
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+ul,
+ol,
+p {
+    margin: 0;
+    padding: 0;
+}
+  
+a {
+    text-decoration: none;
+    color: inherit;
+}
+  
+ul {
+    list-style-type: none;
+}
+
+img {
+    display: block;
+    max-width: 100%;
+    width: auto;
+    height: auto;
+}
+
+.container {
+    max-width: $containerMaxWidth;
+    margin: 0 auto;
+    padding: 0 165px;
+}
+
+.section {
+    margin-bottom: 40px;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+    
+    &__title {
+        font-weight: 700;
+        font-size: 40px;
+        line-height: 40px;
+        margin-bottom: 50px;
+    }
+}
+
+.button {
+    border: 2px solid $darkGrey;
+    background-color: $darkGrey;
+    color: $white;
+    padding: 3px 10px;
+    font-size: 15px;
+    transition: color .3s, background-color .3s;
+    cursor: pointer;
+
+    &:hover {
+        background-color: $white;
+        color: $darkGrey;
+    }
+}
+
+.link {
+    text-decoration: underline;
+
+    &:hover {
+        text-decoration: none;
+    }
+}
+
+.input {
+    border: 2px solid $lightBlue;
+    border-radius: 5px;
+    width: 100%;
+    padding: 10px;
+}
+
+.flex {
+    display: flex;
+    margin: 0 -5px;
+    align-items: center;
+}
+
+.flex-item {
+    padding: 5px;
+}
+  
+@media (max-width: $laptop-breakpoint) {
+    .container {
+        padding: 0 30px;
+    }
+
+    .section { 
+        &__title {
+            font-size: 24px;
+            line-height: 30px;
+            margin-bottom: 40px;
+        }
+    }
+}
+
+@media (max-width: $mobile-breakpoint) {
+    .container {
+        padding: 0 15px;
+    }
+}
+  

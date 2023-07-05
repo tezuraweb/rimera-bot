@@ -1,0 +1,61 @@
+.filter {
+    background-color: $grey;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 20px;
+
+    &__input {
+        margin-bottom: 10px;
+    }
+
+    &__list {
+        background-color: white;
+        border-radius: 5px;
+        max-height: 225px;
+        overflow-y: scroll;
+        margin-bottom: 20px;
+
+        &--item {
+            border-bottom: 2px solid $grey;
+            padding: 5px 10px;
+
+            &.active {
+                border-color: $lightBlue;
+                background-color: $lightBlue;
+            }
+        }
+        
+    }
+
+    &__active {
+        display: flex;
+        margin-bottom: 20px;
+
+        &--item {
+            display: flex;
+            align-items: center;
+            background-color: $white;
+            border-radius: 5px;
+            border: 7px solid $white;
+            padding: 7px;
+            margin-right: 10px;
+            
+            &.active {
+                background-color: $green;
+            }
+        }
+    
+        &--text {
+            margin-right: 10px;
+        }
+
+        &--button {
+            min-width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-size: 22px;
+            padding: 0;
+            transform: rotate(45deg);
+        }
+    }
+}

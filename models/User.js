@@ -14,10 +14,16 @@ class User {
     }
 
     getUserById(id) {
-        return this.db.select('id', 'name', 'status')
+        return this.db.select('id', 'name', 'tgid', 'status')
             .from(this.tableName)
             .where({ id })
             .then((data) => data[0]);
+    }
+
+    getUsersByIds(ids) {
+        return this.db.select('id', 'name', 'status')
+            .from(this.tableName)
+            .whereIn('id', ids);
     }
 
     getAll() {
@@ -27,47 +33,25 @@ class User {
     }
 
     getUsersWithFilter(filter) {
-        if (filter.department.length > 0 && filter.organizations.length > 0 && filter.position.length > 0) {
-            return this.db.select('id', 'tgchat')
-                .from(this.tableName)
-                .whereNotNull('tgchat')
-                .whereIn('department', filter.department)
-                .orWhereIn('organization', filter.organizations)
-                .orWhereIn('position', filter.position);
-        } else if (filter.department.length > 0 && filter.organizations.length > 0) {
-            return this.db.select('id', 'tgchat')
-                .from(this.tableName)
-                .whereNotNull('tgchat')
-                .whereIn('department', filter.department)
-                .orWhereIn('organization', filter.organizations);
-        } else if (filter.department.length > 0 && filter.position.length > 0) {
-            return this.db.select('id', 'tgchat')
-                .from(this.tableName)
-                .whereNotNull('tgchat')
-                .whereIn('department', filter.department)
-                .orWhereIn('position', filter.position);
-        } else if (filter.organizations.length > 0 && filter.position.length > 0) {
-            return this.db.select('id', 'tgchat')
-                .from(this.tableName)
-                .whereNotNull('tgchat')
-                .orWhereIn('organization', filter.organizations)
-                .orWhereIn('position', filter.position);
-        } else if (filter.department.length > 0) {
-            return this.db.select('id', 'tgchat')
-                .from(this.tableName)
-                .whereNotNull('tgchat')
-                .whereIn('department', filter.department);
-        } else if (filter.organizations.length > 0) {
-            return this.db.select('id', 'tgchat')
-                .from(this.tableName)
-                .whereNotNull('tgchat')
-                .whereIn('organization', filter.organizations);
-        } else if (filter.position.length > 0) {
-            return this.db.select('id', 'tgchat')
-                .from(this.tableName)
-                .whereNotNull('tgchat')
-                .whereIn('position', filter.position);
-        }
+        return this.db.select('id', 'tgchat')
+            .from(this.tableName)
+            .whereNotNull('tgchat')
+            .modify((queryBuilder) => {
+                if (filter.organization !== null && filter.organization.length > 0) {
+                    queryBuilder.whereIn('organization', filter.organization);
+                }
+                if (filter.department !== null && filter.department.length > 0) {
+                    queryBuilder.whereIn('department', filter.department);
+                }
+                if (filter.position !== null && filter.position.length > 0) {
+                    if (filter.position.length == 1) {
+                        queryBuilder.whereIn('position', this.db.raw('SELECT id FROM position WHERE category = ?', [filter.position[0]]));
+                    }
+                }
+                if (filter.gender !== null && filter.gender.length > 0) {
+                    queryBuilder.where({'gender': filter.gender[0]});
+                }
+            });
     }
 
     getPhone(phone) {
@@ -77,8 +61,9 @@ class User {
             .then((data) => data[0]);
     }
 
-    signIn(id, chatId, authPhone) {
+    signIn(id, chatId, username, authPhone) {
         return this.db(this.tableName).update({
+                'tgid': username,
                 'tgchat': chatId,
                 'auth_phone': authPhone
             })

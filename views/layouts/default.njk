@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{{ pageTitle }}</title>
+        <meta name="title" content="{{ pageTitle|default('Римера') }}">
+        <link rel="stylesheet" type="text/css" href="/dist/styles.css">
+        {# {% include 'assets.html' %} #}
+    </head>
+
+    <body>
+        {% include 'includes/header.njk' %}
+        
+        {% block bodyContent %}{% endblock %}
+
+        <script src="/dist/bundle.js" type="application/javascript" defer></script>
+    </body>
+
+</html>

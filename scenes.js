@@ -2,8 +2,9 @@ const { Scenes, Markup } = require('telegraf');
 const User = require('./models/User');
 const News = require('./models/News');
 const Department = require('./models/Department');
-const Organization = require('./models/Organization');
-const Position = require('./models/Position');
+// const Organization = require('./models/Organization');
+const Mailing = require('./models/Mailing');
+// const Position = require('./models/Position');
 
 const TG_CHANNEL = '@test_rimera';
 
@@ -37,7 +38,7 @@ class SceneGenerator {
                 let user = await User.getPhone(phoneNumber);
 
                 if (user) {
-                    user = await User.signIn(user.id, ctx.from.id, phoneNumber);
+                    user = await User.signIn(user.id, ctx.from.id, ctx.from.username, phoneNumber);
                     if (user) {
                         ctx.reply("Добро пожаловать, " + user.name + "!");
                         if (user.status == 'admin') {
@@ -67,42 +68,13 @@ class SceneGenerator {
         menuScene.enter((ctx) => {
             ctx.reply(
                 "Выберите пункт меню:",
-                Markup.keyboard(["Предложить новость", "Информационная картина недели", "Конкурсы", "Опросы", "Онлайн приемная руководителя", "Профсоюз"]).oneTime().resize(),
+                Markup.keyboard(["Предложить новость"]).oneTime().resize(),
             );
         });
 
         menuScene.hears("Предложить новость", (ctx) => {
             return ctx.scene.enter('ADD_NEWS_SCENE');
         });
-
-        // menuScene.hears("Информационная картина недели", (ctx) => {
-        //     ctx.reply("Yay!")
-        //     return ctx.scene.enter('INFO_SCENE');
-        // });
-
-        // menuScene.hears("Конкурсы", (ctx) => {
-        //     ctx.reply("Yay!")
-        //     return ctx.scene.enter('CONTESTS_SCENE');
-        // });
-
-        // menuScene.hears("Опросы", (ctx) => {
-        //     ctx.reply("Yay!")
-        //     return ctx.scene.enter('SURVEY_SCENE');
-        // });
-
-        // menuScene.hears("Онлайн приемная руководителя", (ctx) => {
-        //     ctx.reply("Yay!")
-        //     return ctx.scene.enter('BOSS_SCENE');
-        // });
-
-        // menuScene.hears("Профсоюз", (ctx) => {
-        //     ctx.reply("Yay!")
-        //     return ctx.scene.enter('UNION_SCENE');
-        // });
-
-        // menuScene.leave((ctx) => {
-        //     ctx.reply('Thank you for your time!');
-        // });
 
         return menuScene;
     }
@@ -113,28 +85,18 @@ class SceneGenerator {
         adminMenuScene.enter((ctx) => {
             ctx.reply(
                 "Выберите пункт меню:",
-                Markup.keyboard(["Раздел новостей", "Создать рассылку"]).oneTime().resize(),
+                Markup.keyboard(["Предложить новость", "Создать рассылку"]).oneTime().resize(),
             );
-        });
-
-        adminMenuScene.hears("Раздел новостей", (ctx) => {
-            ctx.reply(
-                "Выберите пункт меню:",
-                Markup.keyboard(["Предложить новость", "Предложка", "Назад"]).oneTime().resize(),
-            );
-        });
-
-        adminMenuScene.hears("Создать рассылку", (ctx) => {
-            return ctx.scene.enter('MAILING_SCENE');
         });
 
         adminMenuScene.hears("Предложить новость", (ctx) => {
             return ctx.scene.enter('ADD_NEWS_SCENE');
         });
 
-        adminMenuScene.hears("Предложка", (ctx) => {
-            return ctx.scene.enter('NEWS_INBOX_SCENE');
+        adminMenuScene.hears("Создать рассылку", (ctx) => {
+            return ctx.scene.enter('MAILING_SCENE');
         });
+
 
         adminMenuScene.hears("Назад", (ctx) => {
             return ctx.scene.enter('ADMIN_MENU_SCENE');
@@ -194,13 +156,11 @@ class SceneGenerator {
                     let newPost = await News.addPost(user.id, ctx.session.myData);
                     ctx.session.myData.newsId = newPost.id;
 
+                    ctx.reply("Новость добавлена в предложку!");
+
                     if (user.status == 'admin') {
-                        ctx.reply(
-                            "Новость добавлена в предложку! Хотите отправить в публикацию?",
-                            Markup.keyboard(["Опубликовать", "Оставить в предложке", "Отмена"])
-                        );
+                        return ctx.scene.enter('ADMIN_MENU_SCENE');
                     } else {
-                        ctx.reply("Новость добавлена в предложку!");
                         return ctx.scene.enter('MAIN_MENU_SCENE');
                     }
                 } else {
@@ -212,40 +172,6 @@ class SceneGenerator {
                 console.log(e.message);
                 return ctx.scene.reenter();
             }
-        });
-
-        newsScene.hears("Опубликовать", async (ctx) => {
-            try {
-                if (ctx.session.myData.photo.length > 0) {
-                    ctx.telegram.sendMediaGroup(TG_CHANNEL, ctx.session.myData.photo.map((item, index) => {
-                        if (index == 0) {
-                            return {
-                                media: item,
-                                caption: ctx.session.myData.newsText,
-                                type: 'photo',
-                            }
-                        }
-    
-                        return { media: item, type: 'photo' }
-                    }));
-                } else {
-                    ctx.telegram.sendMessage(TG_CHANNEL, ctx.session.myData.newsText);
-                }
-
-                await News.publishNews(ctx.session.myData.newsId);
-
-                ctx.reply("Сообщение успешно опубликовано!")
-            } catch (e) {
-                ctx.reply("Не удалось опубликовать сообщение!");
-                console.log(e.message);
-            }
-
-            return ctx.scene.enter('ADMIN_MENU_SCENE');
-        });
-
-        newsScene.hears("Оставить в предложке", (ctx) => {
-            ctx.reply("Новость можно рассмотреть и опубликовать позднее в разделе Предложка");
-            return ctx.scene.enter('ADMIN_MENU_SCENE');
         });
 
         newsScene.on("message", (ctx) => {
@@ -276,15 +202,36 @@ class SceneGenerator {
         return newsScene;
     }
 
-    NewsInboxScene() {
-        const newsInboxScene = new Scenes.BaseScene('NEWS_INBOX_SCENE');
+    MailingScene() {
+        const mailingScene = new Scenes.BaseScene('MAILING_SCENE');
 
-        newsInboxScene.enter(async (ctx) => {
+        mailingScene.enter(async (ctx) => {
             ctx.session.myData = {
                 newsList: [],
+                mailingList: [],
                 newsCount: 0,
                 newsIndex: -1,
+                newsId: -1,
+                mailingId: -1,
+                inbox: false,
+                mode: 'init',
             };
+
+            ctx.reply(
+                "Выберите пункт меню",
+                Markup.keyboard(["Мгновенная рассылка", "Предложка новостей", "Назад"]).oneTime().resize(),
+            );
+        });
+
+        mailingScene.hears("Мгновенная рассылка", (ctx) => {
+            ctx.reply(
+                "Выберите опцию",
+                Markup.keyboard(["Отправить всем", "Выбрать рассылку", "Отмена"]).oneTime().resize(),
+            );
+        });
+
+        mailingScene.hears("Предложка новостей", async (ctx) => {
+            ctx.session.myData.inbox = true;
 
             try {
                 ctx.session.myData.newsList = await News.getInbox();
@@ -302,13 +249,13 @@ class SceneGenerator {
                     );
                 }
             } catch (e) {
-                reject("Не удалось загрузить данные!");
+                ctx.reply("Ошибка!");
                 console.log(e.message);
                 return ctx.scene.enter('ADMIN_MENU_SCENE');
             }
         });
 
-        newsInboxScene.hears("Показать следующую новость", async (ctx) => {
+        mailingScene.hears("Показать следующую новость", async (ctx) => {
             try {
                 ctx.session.myData.newsIndex += 1;
 
@@ -333,13 +280,13 @@ class SceneGenerator {
 
                 if (ctx.session.myData.newsIndex + 1 < ctx.session.myData.newsCount) {
                     ctx.reply(
-                        `Автор новости: ${user.name}`,
-                        Markup.keyboard(["Опубликовать", "Показать следующую новость", "Назад"]).oneTime().resize(),
+                        `Автор новости: ${user.name} (@${user.tgid})`,
+                        Markup.keyboard(["Выбрать новость", "Показать следующую новость", "Назад"]).oneTime().resize(),
                     );
                 } else {
                     ctx.reply(
-                        `Автор новости: ${user.name}`,
-                        Markup.keyboard(["Опубликовать", "Назад"]).oneTime().resize(),
+                        `Автор новости: ${user.name} (@${user.tgid})`,
+                        Markup.keyboard(["Выбрать новость", "Назад"]).oneTime().resize(),
                     );
                 }
             } catch (e) {
@@ -349,194 +296,75 @@ class SceneGenerator {
             }
         });
 
-        newsInboxScene.hears("Опубликовать", async (ctx) => {
+        mailingScene.hears("Выбрать новость", (ctx) => {
+            ctx.session.myData.newsId = ctx.session.myData.newsList[ctx.session.myData.newsIndex].id;
+            ctx.reply(
+                "Новость выбрана!\nВыберите опцию",
+                Markup.keyboard(["Отправить всем", "Выбрать рассылку", "Отмена"]).oneTime().resize(),
+            );
+        });
+
+        mailingScene.hears("Выбрать рассылку", async (ctx) => {
+            ctx.session.myData.mode = 'mailing';
+
             try {
-                let content = ctx.session.myData.newsList[ctx.session.myData.newsIndex];
+                let mailings = await Mailing.getAll();
 
-                if (content.files.length > 0) {
-                    ctx.telegram.sendMediaGroup(TG_CHANNEL, content.files.map((item, index) => {
-                        if (index == 0) {
-                            return {
-                                media: item,
-                                caption: content.text,
-                                type: 'photo',
-                            }
-                        }
-    
-                        return { media: item, type: 'photo' }
-                    }));
-                } else {
-                    ctx.telegram.sendMessage(TG_CHANNEL, content.text);
-                }
+                ctx.session.myData.mailingList = mailings.map((item, index) => {
+                    return { id: item.id, index: index }
+                });
 
-                await News.publishNews(content.id);
+                ctx.reply(
+                    `Для выбора рассылки наберите номер:\n
+                    ${mailings.reduce((acc, curr, index) => {
+                        return acc + index.toString() + ": " + curr.name + "\n";
+                    }, '')}`,
+                    Markup.keyboard(["Отмена"]).oneTime().resize(),
+                );
+            } catch (e) {
+                ctx.reply("Не удалось получить данные!");
+                console.log(e.message);
+                return ctx.scene.reenter();
+            }
+        });
 
-                if (ctx.session.myData.newsIndex + 1 < ctx.session.myData.newsCount) {
-                    ctx.reply(
-                        "Сообщение успешно опубликовано!",
-                        Markup.keyboard(["Показать следующую новость", "Назад"]).oneTime().resize(),
-                    );
-                } else {
+        mailingScene.hears("Отправить всем", async (ctx) => {
+            ctx.session.myData.mode = 'send';
+
+            if (ctx.session.myData.inbox) {
+                const res = await publishNews(ctx);
+
+                if (res) {
                     ctx.reply(
                         "Сообщение успешно опубликовано!",
                         Markup.keyboard(["Назад"]).oneTime().resize(),
                     );
+                } else {
+                    ctx.reply("Не удалось опубликовать сообщение!");
+                    return ctx.scene.reenter();
                 }
-            } catch (e) {
-                ctx.reply("Не удалось опубликовать сообщение!");
-                console.log(e.message);
-                return ctx.scene.reenter();
+            } else {
+                ctx.reply(
+                    "Напишите сообщение, при необходимости добавьте медиа-файлы. После отправки сообщение будет разослано отфильтрованным пользователям",
+                    Markup.keyboard(["Отмена"]).oneTime().resize(),
+                );
             }
         });
 
-        newsInboxScene.hears("Назад", (ctx) => {
-            return ctx.scene.enter('ADMIN_MENU_SCENE');
-        });
-
-        return newsInboxScene;
-    }
-
-    MailingScene() {
-        const mailingScene = new Scenes.BaseScene('MAILING_SCENE');
-
-        mailingScene.enter(async (ctx) => {
-            ctx.session.myData = {
-                filters: {
-                    department: [],
-                    organizations: [],
-                    position: [],
-                },
-                hasFilters: false,
-                currentFilter: "",
-                filtersCompleted: false,
-            };
-
-            ctx.reply(
-                "Выберите пункт меню",
-                Markup.keyboard(["Добавить фильтр", "Создать сообщение", "Назад"]).oneTime().resize(),
-            );
-        });
-
-        mailingScene.hears("Добавить фильтр", (ctx) => {
-            ctx.reply(
-                "Выберите фильтры",
-                Markup.keyboard(["Отдел", "Организация", "Должность", "Отмена"]).oneTime().resize(),
-            );
-        });
-
-        mailingScene.hears("Отдел", async (ctx) => {
-            ctx.session.myData.currentFilter = "deps";
-
-            try {
-                let deps = await Department.getRoot();
-
-                ctx.session.myData.currentItems = deps.map((item, index) => {
-                    return { id: item.id, index: index }
-                });
-
-                ctx.reply(
-                    `Для выбора департаментов наберите номера через запятую:
-                    ${deps.reduce((acc, curr, index) => {
-                        return acc + index.toString() + ": " + curr.name + "\n";
-                    }, '')}`,
-                    Markup.keyboard(["Отмена"]).oneTime().resize(),
-                );
-            } catch (e) {
-                ctx.reply("Не удалось получить данные!");
-                console.log(e.message);
-                return ctx.scene.reenter();
-            }
-        });
-
-        mailingScene.hears("Организация", async (ctx) => {
-            ctx.session.myData.currentFilter = "organizations";
-
-            try {
-                let organizations = await Organization.getAll();
-
-                ctx.session.myData.currentItems = organizations.map((item, index) => {
-                    return { id: item.id, index: index }
-                });
-
-                ctx.reply(
-                    `Для выбора организаций наберите номера через запятую:
-                    ${organizations.reduce((acc, curr, index) => {
-                        return acc + index.toString() + ": " + curr.name + "\n";
-                    }, '')}`,
-                    Markup.keyboard(["Отмена"]).oneTime().resize(),
-                );
-            } catch (e) {
-                ctx.reply("Не удалось получить данные!");
-                console.log(e.message);
-                return ctx.scene.reenter();
-            }            
-        });
-
-        mailingScene.hears("Должность", async (ctx) => {
-            ctx.session.myData.currentFilter = "position";
-
-            try {
-                let positions = await Position.getAll();
-
-                ctx.session.myData.currentItems = positions.map((item, index) => {
-                    return { id: item.id, index: index }
-                });
-
-                ctx.reply(
-                    `Для выбора должностей наберите номера через запятую:
-                    ${positions.reduce((acc, curr, index) => {
-                        return acc + index.toString() + ": " + curr.name + "\n";
-                    }, '')}`,
-                    Markup.keyboard(["Отмена"]).oneTime().resize(),
-                );
-            } catch (e) {
-                ctx.reply("Не удалось получить данные!");
-                console.log(e.message);
-                return ctx.scene.reenter();
-            }            
-        });
-
-        mailingScene.hears("Завершить фильтр", async (ctx) => {
-            if (ctx.session.myData.currentFilter = "deps") {
-                try {
-                    ctx.session.myData.filters.department = ctx.session.myData.filters.department.concat(ctx.session.myData.chosenDeps);
-
-                    if (ctx.session.myData.currentItems.length > 0) {
-                        let depsIds = ctx.session.myData.currentItems.map(item => {
-                            return item.id;
-                        });
-    
-                        while (depsIds.length > 0) {
-                            ctx.session.myData.filters.department = ctx.session.myData.filters.department.concat(depsIds);
-    
-                            let deps = await Department.getSubdivision(depsIds);
-        
-                            depsIds = deps.map((item) => {
-                                return item.id;
-                            });
-                        }
-                    }
-
-                    ctx.session.myData.hasFilters = true;
-
+        mailingScene.hears("Опубликовать новость", async (ctx) => {
+            if (ctx.session.myData.inbox) {
+                const res = await publishNews(ctx);
+                
+                if (res) {
                     ctx.reply(
-                        "Фильтр добавлен!",
-                        Markup.keyboard(["Добавить фильтр", "Создать сообщение", "Отмена"]).oneTime().resize(),
+                        "Сообщение успешно опубликовано!",
+                        Markup.keyboard(["Назад"]).oneTime().resize(),
                     );
-                } catch (e) {
-                    ctx.reply("Ошибка!");
-                    console.log(e.message);
+                } else {
+                    ctx.reply("Не удалось опубликовать сообщение!");
                     return ctx.scene.reenter();
                 }
             }
-        });
-
-        mailingScene.hears("Создать сообщение", (ctx) => {
-            ctx.session.myData.filtersCompleted = true;
-            ctx.reply(
-                "Напишите сообщение, при необходимости добавьте медиа-файлы. После отправки сообщение будет разослано отфильтрованным пользователям",
-                Markup.keyboard(["Отмена"]).oneTime().resize(),
-            );
         });
 
         mailingScene.hears("Назад", (ctx) => {
@@ -548,30 +376,62 @@ class SceneGenerator {
         });
 
         mailingScene.on("message", async (ctx) => {
-            if (ctx.session.myData.filtersCompleted) {
+            if (ctx.session.myData.mode == 'send') {
                 try {
                     let users = [];
-                    const promises = [];
+                    let mailing = [];
+                    let promises = [];
 
-                    if (ctx.session.myData.hasFilters) {
-                        users = await User.getUsersWithFilter(ctx.session.myData.filters);
+                    if (ctx.session.myData.mailingId > 0) {
+                        mailing = await Mailing.getById(ctx.session.myData.mailingId);
+                        if (mailing.user_filter !== null && mailing.user_filter.length > 0) {
+                            users = await User.getUsersByIds(mailing.user_filter);
+                        } else {
+                            let filter = {
+                                organization: mailing.organization_filter,
+                                department: mailing.department_filter,
+                                position: mailing.position_filter,
+                                gender: mailing.gender_filter,
+                            }
+
+                            var deps = [];
+                            if (filter.department !== null && filter.department.length > 0) {
+                                deps = await Department.getSubdivisionMultiple(filter.department);
+                            }
+                            while (deps !== null && deps.length > 0) {
+                                let depsIds = deps.map((item) => {
+                                    return item.id;
+                                });
+
+                                filter.department = [...filter.department, ...depsIds];
+                                deps = await Department.getSubdivisionMultiple(depsIds);
+                            }
+
+                            users = await User.getUsersWithFilter(filter);
+                        }
                     } else {
                         users = await User.getAll();
                     }
 
                     function sendMessage(chatId) {
                         return new Promise((resolve) => {
-                            ctx.copyMessage(chatId);
-                            console.log('sent to', chatId);
+                            if (ctx.message.poll) {
+                                ctx.forwardMessage(chatId);
+                            } else {
+                                ctx.copyMessage(chatId);
+                            }
+
                             resolve(chatId);
                         });
                     }
                     
                     users.forEach(user => {
-                        promises.push(sendMessage(user.tgchat));
+                        if (user.tgchat !== null) {
+                            promises.push(sendMessage(user.tgchat));
+                        }
                     });
 
-                    let res = await Promise.all(promises);
+                    const res = await Promise.all(promises);
                     
                     ctx.reply("Рассылка отправлена!");
                     return ctx.scene.enter('ADMIN_MENU_SCENE');
@@ -580,92 +440,125 @@ class SceneGenerator {
                     console.log(e.message);
                     return ctx.scene.reenter();
                 }
-            } else {
-                if (ctx.session.myData.currentFilter == "deps" || ctx.session.myData.currentFilter == "organizations" || ctx.session.myData.currentFilter == "position") {
-                    let wrongInput = false;
+            } else if (ctx.session.myData.mode == 'mailing') {
+                const mailingIndex = parseInt(ctx.message.text.trim());
+                let wrongInput = false;
 
-                    let currentItems = ctx.message.text.split(',').reduce(function(result, item) {
-                        let intNum = parseInt(item.trim());
+                if (!isNaN(mailingIndex)) {
+                    const mailingId = ctx.session.myData.mailingList.find(item => item.index == mailingIndex);
 
-                        if (!isNaN(intNum)) {
-                            result.push(intNum);
-                        }
-                        return result;
-                    }, []);
-
-                    if (currentItems.length == 0) {
+                    if (mailingId === undefined) {
                         wrongInput = true;
                     } else {
-                        for (let i=0; i<currentItems.length; i++) {
-                            if (ctx.session.myData.currentItems.find(item => item.index == currentItems[i]) === undefined) {
-                                wrongInput = true;
-                            }
-                        }
+                        ctx.session.myData.mailingId = mailingId.id;
                     }
+                } else {
+                    wrongInput = true;
+                }
 
-                    if (wrongInput) {
-                        ctx.reply("Неверный ввод!");
-                        return;
+                if (wrongInput) {
+                    ctx.reply(
+                        "Неверный ввод! Попробуйте еще раз.",
+                        Markup.keyboard(["Отмена"]).oneTime().resize(),
+                    );
+                } else {
+                    ctx.session.myData.mode = 'send';
+
+                    if (ctx.session.myData.inbox) {
+                        ctx.reply(
+                            "Рассылка выбрана!",
+                            Markup.keyboard(["Опубликовать новость", "Отмена"]).oneTime().resize(),
+                        );
                     } else {
-                        if (ctx.session.myData.currentFilter == "deps") {
-                            try {
-                                let parentIds = ctx.session.myData.currentItems.filter((item) => currentItems.includes(item.index)).map((item) => {
-                                    return item.id;
-                                });
-    
-                                ctx.session.myData.chosenDeps = parentIds;
-    
-                                let deps = await Department.getSubdivision(parentIds);
-                                
-                                if (deps.length > 0) {
-                                    ctx.session.myData.currentItems = deps.map((item, index) => {
-                                        return { id: item.id, index: index }
-                                    });
-        
-                                    ctx.reply(
-                                        `Для выбора подразделений наберите номера через запятую:
-                                        ${deps.reduce((acc, curr, index) => {
-                                            return acc + index.toString() + ": " + curr.name + "\n";
-                                        }, '')}`,
-                                        Markup.keyboard(["Завершить фильтр", "Отмена"]).oneTime().resize(),
-                                    );
-                                } else {
-                                    ctx.session.myData.filters.department = ctx.session.myData.filters.department.concat(ctx.session.myData.chosenDeps);
-    
-                                    ctx.session.myData.hasFilters = true;
-    
-                                    ctx.reply(
-                                        "Фильтр добавлен!",
-                                        Markup.keyboard(["Добавить фильтр", "Создать сообщение", "Отмена"]).oneTime().resize(),
-                                    );
-                                }
-                            } catch (e) {
-                                ctx.reply("Ошибка!");
-                                console.log(e.message);
-                                return ctx.scene.reenter();
-                            }
-                        } else if (ctx.session.myData.currentFilter == "organizations" || ctx.session.myData.currentFilter == "position") {
-                            let IDs = ctx.session.myData.currentItems.filter((item) => currentItems.includes(item.index)).map((item) => {
-                                return item.id;
-                            });
-
-                            if (ctx.session.myData.currentFilter == "organizations") {
-                                ctx.session.myData.filters.organizations = ctx.session.myData.filters.organizations.concat(IDs);
-                            } else {
-                                ctx.session.myData.filters.position = ctx.session.myData.filters.position.concat(IDs);
-                            }
-
-                            ctx.session.myData.hasFilters = true;
-
-                            ctx.reply(
-                                "Фильтр добавлен!",
-                                Markup.keyboard(["Добавить фильтр", "Создать сообщение", "Отмена"]).oneTime().resize(),
-                            );
-                        }
+                        ctx.reply(
+                            "Рассылка выбрана!\nНапишите сообщение, при необходимости добавьте медиа-файлы. После отправки сообщение будет разослано отфильтрованным пользователям.",
+                            Markup.keyboard(["Отмена"]).oneTime().resize(),
+                        );
                     }
+                    
                 }
             }
         });
+
+        async function publishNews(ctx) {
+            try {
+                const content = ctx.session.myData.newsList[ctx.session.myData.newsIndex];
+                let users = [];
+                let mailing = [];
+                let promises = [];
+
+                if (ctx.session.myData.mailingId > 0) {
+                    mailing = await Mailing.getById(ctx.session.myData.mailingId);
+                    if (mailing.user_filter !== null && mailing.user_filter.length > 0) {
+                        users = await User.getUsersByIds(mailing.user_filter);
+                    } else {
+                        let filter = {
+                            organization: mailing.organization_filter,
+                            department: mailing.department_filter,
+                            position: mailing.position_filter,
+                            gender: mailing.gender_filter,
+                        }
+
+                        var deps = [];
+                        if (filter.department !== null && filter.department.length > 0) {
+                            deps = await Department.getSubdivisionMultiple(filter.department);
+                        }
+                        while (deps !== null && deps.length > 0) {
+                            let depsIds = deps.map((item) => {
+                                return item.id;
+                            });
+
+                            filter.department = [...filter.department, ...depsIds];
+                            deps = await Department.getSubdivisionMultiple(depsIds);
+                        }
+
+                        users = await User.getUsersWithFilter(filter);
+                    }
+                } else {
+                    users = await User.getAll();
+                }
+
+                function sendMessage(chatId) {
+                    return new Promise((resolve) => {
+                        if (content.files.length > 0) {
+                            ctx.telegram.sendMediaGroup(chatId, content.files.map((item, index) => {
+                                if (index == 0) {
+                                    return {
+                                        media: item,
+                                        caption: content.text,
+                                        type: 'photo',
+                                    }
+                                }
+            
+                                return { media: item, type: 'photo' }
+                            }));
+                        } else {
+                            ctx.telegram.sendMessage(chatId, content.text);
+                            //ctx.telegram.sendMessage(TG_CHANNEL, content.text);
+                        }
+
+                        resolve(chatId);
+                    });
+                }
+                
+                users.forEach(user => {
+                    if (user.tgchat !== null) {
+                        promises.push(sendMessage(user.tgchat));
+                    }
+                });
+
+                const res = await Promise.all(promises);
+
+                if (content.status == 'disposable') {
+                    await News.deleteNews(content.id);
+                }
+
+                return true;
+            } catch (e) {
+                console.log(e.message);
+                return false;
+            }
+        }
 
         return mailingScene;
     }
