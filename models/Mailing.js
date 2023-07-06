@@ -36,6 +36,7 @@ class Mailing {
                     'position_filter': data.position,
                     'gender_filter': data.gender,
                     'sending_date': data.date,
+                    'channels': data.channels,
                 })
                 .then((res) => res[0]);
         } catch (err) {
@@ -52,6 +53,7 @@ class Mailing {
                     'position_filter': data.position,
                     'gender_filter': data.gender,
                     'sending_date': data.date,
+                    'channels': data.channels,
                 })
                 .where({ id })
                 .then((res) => res[0]);

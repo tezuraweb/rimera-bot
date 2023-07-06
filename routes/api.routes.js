@@ -80,7 +80,7 @@ router
     .route('/mailing-create')
     .post(async (req, res) => {
         try {
-            const data = pick(req.body, 'title', 'organization', 'department', 'position', 'gender', 'date');
+            const data = pick(req.body, 'title', 'organization', 'department', 'position', 'gender', 'date', 'channels');
 
             const mailing = await Mailing.create(data);
 
@@ -95,7 +95,7 @@ router
     .post(async (req, res) => {
         try {
             const id = parseInt(req.params.id);
-            const data = pick(req.body, 'title', 'organization', 'department', 'position', 'gender', 'date');
+            const data = pick(req.body, 'title', 'organization', 'department', 'position', 'gender', 'date', 'channels');
 
             const mailing = await Mailing.update(id, data);
 

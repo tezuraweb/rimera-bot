@@ -2,9 +2,7 @@ const { Scenes, Markup } = require('telegraf');
 const User = require('./models/User');
 const News = require('./models/News');
 const Department = require('./models/Department');
-// const Organization = require('./models/Organization');
 const Mailing = require('./models/Mailing');
-// const Position = require('./models/Position');
 
 const TG_CHANNEL = '@test_rimera';
 
@@ -24,7 +22,7 @@ class SceneGenerator {
                         return ctx.scene.enter('MAIN_MENU_SCENE');
                     }
                 } else {
-                    ctx.reply("Добро пожаловать! Для регистрации отправьте номер телефона");
+                    ctx.reply("Добро пожаловать! Для регистрации отправьте номер телефона или табельный номер");
                 }
             } catch (e) {
                 ctx.reply("Ошибка!");
@@ -34,11 +32,11 @@ class SceneGenerator {
 
         authScene.on("message", async (ctx) => {
             try {
-                let phoneNumber = ctx.message.text.trim();
-                let user = await User.getPhone(phoneNumber);
+                let number = ctx.message.text.trim();
+                let user = await User.getByNumber(number);
 
                 if (user) {
-                    user = await User.signIn(user.id, ctx.from.id, ctx.from.username, phoneNumber);
+                    user = await User.signIn(user.id, ctx.from.id, ctx.from.username);
                     if (user) {
                         ctx.reply("Добро пожаловать, " + user.name + "!");
                         if (user.status == 'admin') {
@@ -379,6 +377,7 @@ class SceneGenerator {
             if (ctx.session.myData.mode == 'send') {
                 try {
                     let users = [];
+                    let channels = [];
                     let mailing = [];
                     let promises = [];
 
@@ -408,6 +407,10 @@ class SceneGenerator {
                             }
 
                             users = await User.getUsersWithFilter(filter);
+
+                            if (mailing.channels !== null && mailing.channels.length > 0) {
+                                channels = mailing.channels;
+                            }
                         }
                     } else {
                         users = await User.getAll();
@@ -429,6 +432,10 @@ class SceneGenerator {
                         if (user.tgchat !== null) {
                             promises.push(sendMessage(user.tgchat));
                         }
+                    });
+
+                    channels.forEach(channel => {
+                        promises.push(sendMessage(channel));
                     });
 
                     const res = await Promise.all(promises);
@@ -484,6 +491,7 @@ class SceneGenerator {
             try {
                 const content = ctx.session.myData.newsList[ctx.session.myData.newsIndex];
                 let users = [];
+                let channels = [];
                 let mailing = [];
                 let promises = [];
 
@@ -513,6 +521,10 @@ class SceneGenerator {
                         }
 
                         users = await User.getUsersWithFilter(filter);
+
+                        if (mailing.channels !== null && mailing.channels.length > 0) {
+                            channels = mailing.channels;
+                        }
                     }
                 } else {
                     users = await User.getAll();
@@ -534,7 +546,6 @@ class SceneGenerator {
                             }));
                         } else {
                             ctx.telegram.sendMessage(chatId, content.text);
-                            //ctx.telegram.sendMessage(TG_CHANNEL, content.text);
                         }
 
                         resolve(chatId);
@@ -545,6 +556,10 @@ class SceneGenerator {
                     if (user.tgchat !== null) {
                         promises.push(sendMessage(user.tgchat));
                     }
+                });
+
+                channels.forEach(channel => {
+                    promises.push(sendMessage(channel));
                 });
 
                 const res = await Promise.all(promises);

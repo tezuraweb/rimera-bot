@@ -16,9 +16,14 @@ const MailingControlPanel = ({ selectedMailing }) => {
     const [newFilter, setNewFilter] = useState('');
     const [selectedGender, setSelectedGender] = useState('m');
     const [checkboxBoss, setCheckboxBoss] = useState(false);
-    const [checkboxEmployee, setCheckboxEmployee] = useState(false); mailingChanged
+    const [checkboxEmployee, setCheckboxEmployee] = useState(false);
+    const [publishToChannels, setPublishToChannels] = useState(false);
     const [mailingChanged, setMailingChanged] = useState(false);
     const [mailingUpdated, setMailingUpdated] = useState(false);
+    
+
+    const channels = ['@test_rimera'];
+
 
     useEffect(() => {
         const fetchMailing = async () => {
@@ -47,6 +52,7 @@ const MailingControlPanel = ({ selectedMailing }) => {
                 position: positions,
                 gender: gender ? selectedGender : null,
                 date: date ? date.toISOString() : null,
+                channels: publishToChannels ? channels : null,
             };
 
             if (selectedMailing && selectedMailing !== null) {
@@ -109,6 +115,11 @@ const MailingControlPanel = ({ selectedMailing }) => {
 
     const handleCheckboxEmployee = (event) => {
         setCheckboxEmployee(event.target.checked);
+        setMailingChanged(true);
+    };
+
+    const handleCheckboxChannels = (event) => {
+        setPublishToChannels(event.target.checked);
         setMailingChanged(true);
     };
 
@@ -246,6 +257,18 @@ const MailingControlPanel = ({ selectedMailing }) => {
                         )}
                     </div>
                 )}
+
+                <div class="control__checkbox">
+                    <label class="control__checkbox--label">
+                        <input
+                            class="control__checkbox--item"
+                            type="checkbox"
+                            checked={publishToChannels}
+                            onChange={handleCheckboxChannels}
+                        />
+                        Опубликовать в каналы
+                    </label>
+                </div>
 
                 <div class="control__row">
                     {(addFilter && !(organization.length > 0 && department.length > 0 && position && gender)) && (

@@ -54,18 +54,19 @@ class User {
             });
     }
 
-    getPhone(phone) {
+    getByNumber(number) {
         return this.db.select('id', 'name', 'status', 'phone', 'auth_phone')
             .from(this.tableName)
-            .where({ phone })
+            .where({ 'phone': number })
+            .orWhere({ 'user_outer_id': number })
             .then((data) => data[0]);
     }
 
-    signIn(id, chatId, username, authPhone) {
+    signIn(id, chatId, username) {
         return this.db(this.tableName).update({
                 'tgid': username,
                 'tgchat': chatId,
-                'auth_phone': authPhone
+                // 'auth_phone': authPhone
             })
             .where({ id })
             .returning('name')
