@@ -1,4 +1,5 @@
 {% set pageTitle = "Регистрация" %}
+{% set isLogin = false %}
 
 {% extends "layouts/default.njk" %}
 
@@ -6,25 +7,23 @@
 
     <main>
         <section class="container">
-            <nav class="nav">
-                <a class="link" href="/login">Войти</a>
-            </nav>
-        </section>
-
-        <section class="container">
             <form id="signin-form" class="form" action="/signup" method="post" enctype="application/x-www-form-urlencoded">
-                <label class="form__label" for="form-email">Email</label>
-                <input class="form__input" id="form-email" name="email" type="email" required>
-                <label class="form__label" for="form-name">Имя пользователя</label>
+                <label class="form__label" for="form-name">Телефон или табельный номер</label>
                 <input class="form__input" id="form-name" name="username" type="text" required>
                 <label class="form__label" for="form-password">Пароль</label>
                 <input class="form__input" id="form-password" name="password" type="password" required>
 
-                {% if signupFailed %}
-                    <div class="form__popup form__negative">Пользователь существует!</div>
+                {% if signupFailed == 'invalidCredentials' %}
+                    <div class="form__popup form__negative">Введены неверные данные!</div>
+                {% elif signupFailed == 'noUser' %}
+                    <div class="form__popup form__negative">Пользователь не существует!</div>
+                {% elif signupFailed == 'signedUp' %}
+                    <div class="form__popup form__negative">Пользователь уже зарегистрирован!</div>
+                {% elif signupFailed == 'noAccess' %}
+                    <div class="form__popup form__negative">Доступ только для администраторов!</div>
                 {% endif %}
 
-                <button class="form__button link" type="submit">Регистрация</button>
+                <button class="form__button" type="submit">Регистрация</button>
             </form>
         </section>
     </main>

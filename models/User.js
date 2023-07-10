@@ -55,7 +55,7 @@ class User {
     }
 
     getByNumber(number) {
-        return this.db.select('id', 'name', 'status', 'phone', 'auth_phone')
+        return this.db.select('id', 'name', 'status', 'phone')
             .from(this.tableName)
             .where({ 'phone': number })
             .orWhere({ 'user_outer_id': number })
@@ -67,6 +67,23 @@ class User {
                 'tgid': username,
                 'tgchat': chatId,
                 // 'auth_phone': authPhone
+            })
+            .where({ id })
+            .returning('name')
+            .then((data) => data[0]);
+    }
+
+    backofficeCheck(number) {
+        return this.db.select('id', 'name', 'status', 'password')
+            .from(this.tableName)
+            .where({ 'phone': number })
+            .orWhere({ 'user_outer_id': number })
+            .then((data) => data[0]);
+    }
+
+    backofficeSignUp(id, password) {
+            return this.db(this.tableName).update({
+                'password': password
             })
             .where({ id })
             .returning('name')

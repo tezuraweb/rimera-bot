@@ -3,21 +3,10 @@ const { Telegraf, Scenes, session } = require('telegraf');
 const SceneGenerator = require('./scenes');
 const { dateTimeNow } = require('./utils/logging');
 
-class Bot {
-    constructor() {
-        try {
-            this.bot = new Telegraf(Config.TELEGRAM_TOKEN, {});
-            this.launched = false;
-    
-            this.init();
-    
-            console.log('%s Telegram bot created', dateTimeNow());
-        } catch (e) {
-            console.log('%s Telegram bot creation error: %s', dateTimeNow(), e);
-        }
-    }
+const createBot = () => {
+    try {
+        const bot = new Telegraf(Config.TELEGRAM_TOKEN, {});
 
-    init() {
         const curScene = new SceneGenerator();
         const authScene = curScene.AuthScene();
         const menuScene = curScene.MainMenuScene();
@@ -25,8 +14,7 @@ class Bot {
         const newsScene = curScene.AddNewsScene();
         const mailingScene = curScene.MailingScene();
 
-
-        this.bot.use(async (ctx, next) => {
+        bot.use(async (ctx, next) => {
             const start = new Date();
             await next();
             const ms = new Date() - start;
@@ -38,7 +26,7 @@ class Bot {
             // );
         });
 
-        // this.bot.use(Telegraf.log());
+        // bot.use(Telegraf.log());
 
         const stage = new Scenes.Stage([
             authScene,
@@ -48,23 +36,19 @@ class Bot {
             mailingScene,
         ]);
 
-        this.bot.use(session());
-        this.bot.use(stage.middleware());
+        bot.use(session());
+        bot.use(stage.middleware());
 
-        this.bot.command('start', (ctx) => {
+        bot.command('start', (ctx) => {
             ctx.scene.enter('AUTH_SCENE');
         });
-    }
 
-    launch() {
-        try {
-            this.bot.launch();
-            this.launched = true;
-            console.log('%s Telegram bot started', dateTimeNow());
-        } catch (e) {
-            console.log('%s Telegram bot launch error: %s', dateTimeNow(), e);
-        }
+        console.log('%s Telegram bot created', dateTimeNow());
+
+        return bot;
+    } catch (e) {
+        console.log('%s Telegram bot creation error: %s', dateTimeNow(), e);
     }
 }
 
-module.exports = new Bot();
+module.exports = createBot();

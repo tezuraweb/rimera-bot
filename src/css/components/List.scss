@@ -38,4 +38,15 @@
     &__row {
         display: flex;
     }
+
+    @media (max-width: $mobile-breakpoint) {
+        &__wrapper {
+            max-height: 450px;
+            height: auto;
+        }
+
+        &__item {
+            padding: 10px;
+        }
+    }
 }

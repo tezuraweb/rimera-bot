@@ -1,16 +1,21 @@
-<header>
+<header class="header">
     <div class="container">
         <nav class="nav">
-            {# {% if user %}
-                <a class="link" href="/logout">Выйти</a>
-                <a class="link" href="/posts/1">Мои новости</a>
-                <a class="link" href="/create">Добавить новость</a>
+            {% if user %}
+                <a class="nav__link link" href="/news">Новости</a>
+                <a class="nav__link link" href="/mailing">Рассылки</a>
+                <div class="nav__block">
+                    <span class="nav__name">{{ user.user_name }}</span>
+                    <a class="nav__link link" href="/logout">Выйти</a>
+                </div>
+                
             {% else %}
-                <a class="link" href="/login">Войти</a>
-                <a class="link" href="/signup">Регистрация</a>
-            {% endif %} #}
-            <a class="link" href="/news">Новости</a>
-            <a class="link" href="/mailing">Рассылки</a>
+                {% if isLogin %}
+                    <a class="nav__link link" href="/signup">Регистрация</a>
+                {% else %}
+                    <a class="nav__link nav__link--noMargin link" href="/login">Войти</a>
+                {% endif %}
+            {% endif %}
         </nav>
     </div>
 </header>

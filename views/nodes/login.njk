@@ -1,4 +1,5 @@
 {% set pageTitle = "Авторизация" %}
+{% set isLogin = true %}
 
 {% extends "layouts/default.njk" %}
 
@@ -6,23 +7,21 @@
 
     <main>
         <section class="container">
-            <nav class="nav">
-                <a class="link" href="/signup">Регистрация</a>
-            </nav>
-        </section>
-
-        <section class="container">
             <form id="login-form" class="form" action="/login" method="post" enctype="application/x-www-form-urlencoded">
-                <label class="form__label" for="form-email">Email</label>
-                <input class="form__input" id="form-email" name="email" type="email" required>
+                <label class="form__label" for="form-username">Телефон или табельный номер</label>
+                <input class="form__input" id="form-username" name="username" type="text" required>
                 <label class="form__label" for="form-password">Пароль</label>
                 <input class="form__input" id="form-password" name="password" type="password" required>
 
-                {% if authFailed %}
+                {% if authFailed == 'invalidCredentials' %}
+                    <div class="form__popup form__negative">Введены неверные данные!</div>
+                {% elif authFailed == 'noUser' %}
+                    <div class="form__popup form__negative">Пользователь не зарегистрирован!</div>
+                {% elif authFailed == 'wrongPassword' %}
                     <div class="form__popup form__negative">Неверный логин или пароль!</div>
                 {% endif %}
 
-                <button class="form__button link" type="submit">Войти</button>
+                <button class="form__button" type="submit">Войти</button>
             </form>
         </section>
     </main>

@@ -25,7 +25,6 @@
                 background-color: $lightBlue;
             }
         }
-        
     }
 
     &__active {
@@ -59,6 +58,15 @@
             font-size: 22px;
             padding: 0;
             transform: rotate(45deg);
+        }
+    }
+
+    @media (max-width: $mobile-breakpoint) {
+        &__active {
+            &--item {
+                border: 5px solid $white;
+                padding: 5px;
+            }
         }
     }
 }

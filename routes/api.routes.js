@@ -41,7 +41,7 @@ router
         try {
             const id = req.params.id;
 
-            const imgHref = await bot.bot.telegram.getFileLink(id).then((res) => res.href);
+            const imgHref = await bot.telegram.getFileLink(id).then((res) => res.href);
 
             res.json(imgHref);
         } catch (err) {

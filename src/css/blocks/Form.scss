@@ -1,0 +1,40 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    max-width: 500px;
+    margin: 0 auto;
+
+    &__input {
+        margin: 10px 0;
+        padding: 10px;
+        border: 2px solid $grey;
+        border-radius: 10px;
+    }
+    
+    &__button {
+        margin: 20px 0 0;
+    }
+    
+    &__button {
+        margin: 20px 0 0;
+        width: 100%;
+        display: block;
+        padding: 10px 20px;
+        border: 1px solid $blue;
+        color: $blue;
+        border-radius: 10px;
+        font-size: inherit;
+        line-height: inherit;
+        background: inherit;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    &__negative {
+        padding: 10px;
+        background-color: $pink;
+        color: $white;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+}

@@ -63,4 +63,16 @@
             margin-right: 5px;
         }
     }
+
+    @media (max-width: $mobile-breakpoint) {
+        &__wrapper {
+            padding: 10px;
+        }
+
+        &__images {
+            &--item {
+                flex-basis: 100%;
+            }
+        }
+    }
 }
