@@ -114,7 +114,7 @@ router
                     { user_id: user.id, user_name: user.name },
                     Config.TOKEN_SECRET,
                     {
-                        expiresIn: "1h",
+                        expiresIn: "9h",
                     }
                 );
 

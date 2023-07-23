@@ -15,11 +15,16 @@ class SceneGenerator {
                 let user = await User.getUser(ctx.from.id);
 
                 if (user) {
-                    ctx.reply("Добро пожаловать, " + user.name + "!");
-                    if (user.status == 'admin') {
-                        return ctx.scene.enter('ADMIN_MENU_SCENE');
+                    if (user.status == 'fired') {
+                        ctx.reply("Вам отказано в доступе!");
                     } else {
-                        return ctx.scene.enter('MAIN_MENU_SCENE');
+                        ctx.reply("Добро пожаловать, " + user.name + "!");
+
+                        if (user.status == 'admin') {
+                            return ctx.scene.enter('ADMIN_MENU_SCENE');
+                        } else {
+                            return ctx.scene.enter('MAIN_MENU_SCENE');
+                        }
                     }
                 } else {
                     ctx.reply("Добро пожаловать! Для регистрации отправьте номер телефона или табельный номер");
@@ -30,19 +35,28 @@ class SceneGenerator {
             }
         });
 
+        authScene.command('start', (ctx) => {
+            ctx.scene.reenter();
+        });
+
         authScene.on("message", async (ctx) => {
             try {
                 let number = ctx.message.text.trim();
                 let user = await User.getByNumber(number);
 
                 if (user) {
-                    user = await User.signIn(user.id, ctx.from.id, ctx.from.username);
                     if (user) {
-                        ctx.reply("Добро пожаловать, " + user.name + "!");
-                        if (user.status == 'admin') {
-                            return ctx.scene.enter('ADMIN_MENU_SCENE');
+                        if (user.status == 'fired') {
+                            ctx.reply("Вам отказано в доступе!");
                         } else {
-                            return ctx.scene.enter('MAIN_MENU_SCENE');
+                            user = await User.signIn(user.id, ctx.from.id, ctx.from.username);
+                            ctx.reply("Добро пожаловать, " + user.name + "!");
+
+                            if (user.status == 'admin') {
+                                return ctx.scene.enter('ADMIN_MENU_SCENE');
+                            } else {
+                                return ctx.scene.enter('MAIN_MENU_SCENE');
+                            }
                         }
                     } else {
                         ctx.reply("Ошибка авторизации!");

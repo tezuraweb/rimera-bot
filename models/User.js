@@ -57,8 +57,19 @@ class User {
     getByNumber(number) {
         return this.db.select('id', 'name', 'status', 'phone')
             .from(this.tableName)
-            .where({ 'phone': number })
-            .orWhere({ 'user_outer_id': number })
+            .modify((queryBuilder) => {
+                if (number.length >= 10 && number.length <= 12) {
+                    if (number.length == 10) {
+                        queryBuilder.whereILike('phone', `%${number}`);
+                    } else if (number.length == 11) {
+                        queryBuilder.whereILike('phone', `%${number.slice(1)}`);
+                    } else {
+                        queryBuilder.whereILike('phone', `%${number.slice(2)}`);
+                    }
+                } else {
+                    queryBuilder.where({ 'user_outer_id': number });
+                }
+            })
             .then((data) => data[0]);
     }
 
@@ -76,8 +87,19 @@ class User {
     backofficeCheck(number) {
         return this.db.select('id', 'name', 'status', 'password')
             .from(this.tableName)
-            .where({ 'phone': number })
-            .orWhere({ 'user_outer_id': number })
+            .modify((queryBuilder) => {
+                if (number.length >= 10 && number.length <= 12) {
+                    if (number.length == 10) {
+                        queryBuilder.whereILike('phone', `%${number}`);
+                    } else if (number.length == 11) {
+                        queryBuilder.whereILike('phone', `%${number.slice(1)}`);
+                    } else {
+                        queryBuilder.whereILike('phone', `%${number.slice(2)}`);
+                    }
+                } else {
+                    queryBuilder.where({ 'user_outer_id': number });
+                }
+            })
             .then((data) => data[0]);
     }
 
