@@ -17,7 +17,7 @@ const NewsControlPanel = ({ selectedNews }) => {
                     selectedNews.files.forEach(file => {
                         promises.push(getImageHref(file));
                     });
-    
+
                     const res = await Promise.all(promises);
 
                     setImages(res);
@@ -27,7 +27,7 @@ const NewsControlPanel = ({ selectedNews }) => {
                 console.log('Ошибка при загрузке изображений:', error);
             }
         };
-        
+
         if (selectedNews !== null) {
             fetchImages();
             setNewsText(selectedNews.text);
@@ -69,36 +69,42 @@ const NewsControlPanel = ({ selectedNews }) => {
     return (
         <div class="control">
             {selectedNews && (
-                <div class="control__wrapper">
-                    <h2 class="control__title">Панель управления новостью</h2>
-
-                    <div class="control__link">
-                        <span>Автор: </span>
-                        <a class="link" href={'https://t.me/' + selectedNews.username} target='_blank' rel='nofollow noopener'>{'@' + selectedNews.username}</a>
-                    </div>
-                    <textarea
-                        class="control__text"
-                        cols="50"
-                        rows="8"
-                        value={newsText}
-                        onChange={(event) => {
-                            setNewsText(event.target.value);
-                            setNewsChanged(true);
-                        }}
-                    ></textarea>
-                    {hasImages && (
-                        <div class="control__images flex">
-                            {images.filter(img => img !== null).map((img, index) => (
-                                <div class="control__images--item flex-item" key={index}>
-                                    <img src={img} alt="img" />
+                <div>
+                    <h2 class="control__title">Редактор новостей</h2>
+                    <div class="control__wrapper">
+                        <div class="control__link">
+                            <span>Автор: </span>
+                            <a class="link" href={'https://t.me/' + selectedNews.username} target='_blank' rel='nofollow noopener'>{'@' + selectedNews.username}</a>
+                            <div class="control__description">Текст новости:
+                                <div class="tooltip">
+                                        <span class="tooltip__text">Вы можете отредактировать текст новости, для этого кликните в поле ниже и начните
+                                            вводить текст.  Затем кликните по кнопке “Сохранить”. После сохранения выйдите из панели администратора и опубликуйте ваши новости через бота.</span>
                                 </div>
-                            ))}
+                            </div>
                         </div>
-                    )}
-
-                    {newsChanged && (
-                        <button class="control__button button" onClick={() => setNewsUpdated(true)}>Сохранить</button>
-                    )}
+                        <textarea
+                            class="control__text"
+                            cols="50"
+                            rows="8"
+                            value={newsText}
+                            onChange={(event) => {
+                                setNewsText(event.target.value);
+                                setNewsChanged(true);
+                            }}
+                        ></textarea>
+                        {hasImages && (
+                            <div class="control__images flex">
+                                {images.filter(img => img !== null).map((img, index) => (
+                                    <div class="control__images--item flex-item" key={index}>
+                                        <img src={img} alt="img" />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {newsChanged && (
+                            <button class="control__button button" onClick={() => setNewsUpdated(true)}>Сохранить</button>
+                        )}
+                    </div>
                 </div>
             )}
         </div>
