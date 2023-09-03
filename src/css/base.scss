@@ -1,3 +1,31 @@
+@font-face {
+    font-family: 'Circe';
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    src: local('Circe-Regular'), local('Circe Regular'),
+        url('../fonts/Circe-Regular.woff2') format('woff2'), url('../fonts/Circe-Regular.woff') format('woff');
+}
+
+@font-face {
+    font-family: 'CirceGlyphs';
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    src: local('Circe-RegularGlyphs'), local('Circe RegularGlyphs'),
+        url('../fonts/Circe-RegularGlyphs.woff2') format('woff2'),
+        url('../fonts/Circe-RegularGlyphs.woff') format('woff');
+}
+
+@font-face {
+    font-family: 'Circe';
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+    src: local('Circe-Bold'), local('Circe Bold'), url('../fonts/Circe-Bold.woff2') format('woff2'),
+        url('../fonts/Circe-Bold.woff') format('woff');
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -17,13 +45,13 @@ body {
     padding: 0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-family: "Roboto", sans-serif;
+    font-family: 'Circe', sans-serif;
     background: $white;
-    color: $black;
+    color: $rimeraGrey;
     font-style: normal;
     font-weight: 400;
-    font-size: 15px;
-    line-height: 22px;
+    font-size: 24px;
+    line-height: 100%;
     min-width: $containerMinWidth;
     overflow-x: hidden;
     overflow-anchor: none;
@@ -61,42 +89,44 @@ img {
 .container {
     max-width: $containerMaxWidth;
     margin: 0 auto;
-    padding: 0 165px;
+    padding: 0 100px;
 }
 
 .section {
-    margin-bottom: 40px;
-
-    &:last-child {
-        margin-bottom: 0;
-    }
+    padding-top: 100px;
     
     &__title {
-        font-weight: 700;
-        font-size: 40px;
-        line-height: 40px;
-        margin-bottom: 50px;
+        font-size: 55px;
+        margin-bottom: 25px;
+        text-transform: uppercase;
+    }
+    &__description {
+        font-size: 24px;
+        margin-bottom: 45px;
+        text-transform: uppercase;
     }
 }
 
 .button {
-    border: 2px solid $darkGrey;
+    border: none;
     background-color: $darkGrey;
     color: $white;
-    padding: 3px 10px;
-    font-size: 15px;
+    font-weight: bold;
+    font-size: 24px;
+    text-transform: uppercase;
     transition: color .3s, background-color .3s;
     cursor: pointer;
 
     &:hover {
-        background-color: $white;
-        color: $darkGrey;
+        background-color: $rimeraRed;
+        color: $white;
     }
 }
 
 .link {
-    color: $blue;
+    color: $rimeraGrey;
     font-weight: bold;
+    font-size: 24px;
 
     &:hover {
         text-decoration: underline;
@@ -120,10 +150,46 @@ img {
     padding: 5px;
 }
 
-.header {
-    margin-bottom: 30px;
-    padding: 15px 0;
-    border-bottom: 2px solid $lightBlue;
+.tooltip {
+    z-index: 1;
+    position: absolute;
+    top: 15px;
+    right: -60px;
+    display: inline-block;
+    background-color: $rimeraGreen;
+    width: 35px;
+    height: 35px;
+    color: $white;
+    border-radius: 50%;
+    cursor: pointer;
+
+    &::before {
+        position: absolute;
+        content: '?';
+        width: 35px;
+        height: 35px;
+        top: 8px;
+        left: 12px;
+        border-radius: 50%;
+    }
+
+    &__text {
+        position: absolute;
+        z-index: 1;
+        visibility: hidden;
+        width: 600px;
+        left: 50px;
+        padding: 25px;
+        font-size: 18px;
+        text-transform: none;
+        color: $rimeraGrey;
+        background-color: $white;
+    }
+
+    &:hover &__text {
+        visibility: visible;
+    }
+
 }
   
 @media (max-width: $laptop-breakpoint) {

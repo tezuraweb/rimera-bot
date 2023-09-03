@@ -1,0 +1,60 @@
+.header {
+
+    &__heading {
+        padding: 44px 0;
+        background-color: $rimeraRed;
+    }
+
+    &__container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    &__logo {
+        margin-right: 40px;
+    }
+
+    &__name {
+        color: $white;
+        font-weight: 400;
+        font-size: 24px;
+        text-transform: uppercase;
+    }
+
+    &__link {
+        color: $white;
+        font-weight: bold;
+        font-size: 24px;
+        text-transform: uppercase;
+    }
+
+    &__nav {
+        display: flex;
+        margin-bottom: 30px;
+    }
+
+    &__bookmark {
+        max-width: 285px;
+        padding: 10px 20px;
+        border-bottom-left-radius: 30px;
+        border-bottom-right-radius: 30px;
+        text-align: center;
+        transition: background-color .3s;
+
+        &:nth-child(1) {
+            background-color: $rimeraGreen;
+        }
+        &:nth-child(2) {
+            background-color: $rimeraBlue;
+        }
+        // &:nth-child(3) {
+        //     background-color: $rimeraOrange;
+        // }
+        &:hover,
+        &:active,
+        &:focus {
+            background-color: $rimeraRed;
+        }
+    }
+}
