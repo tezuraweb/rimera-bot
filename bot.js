@@ -13,6 +13,8 @@ const createBot = () => {
         const adminMenuScene = curScene.AdminMenuScene();
         const newsScene = curScene.AddNewsScene();
         const mailingScene = curScene.MailingScene();
+        const feedbackScene = curScene.FeedbackScene();
+        const appealScene = curScene.AppealScene();
 
         bot.use(async (ctx, next) => {
             const start = new Date();
@@ -34,6 +36,8 @@ const createBot = () => {
             adminMenuScene,
             newsScene,
             mailingScene,
+            feedbackScene,
+            appealScene,
         ]);
 
         bot.use(session());

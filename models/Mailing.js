@@ -33,10 +33,11 @@ class Mailing {
                     'name': data.title,
                     'organization_filter': data.organization,
                     'department_filter': data.department,
+                    'user_filter': data.users,
                     'position_filter': data.position,
                     'gender_filter': data.gender,
                     'sending_date': data.date,
-                    'channels': data.channels,
+                    // 'channels': data.channels,
                 })
                 .then((res) => res[0]);
         } catch (err) {
@@ -50,10 +51,11 @@ class Mailing {
                     'name': data.title,
                     'organization_filter': data.organization,
                     'department_filter': data.department,
+                    'user_filter': data.users,
                     'position_filter': data.position,
                     'gender_filter': data.gender,
                     'sending_date': data.date,
-                    'channels': data.channels,
+                    // 'channels': data.channels,
                 })
                 .where({ id })
                 .then((res) => res[0]);

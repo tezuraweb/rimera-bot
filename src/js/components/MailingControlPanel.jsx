@@ -11,13 +11,14 @@ const MailingControlPanel = ({ selectedMailing }) => {
     const [position, setPosition] = useState(false);
     const [gender, setGender] = useState(false);
     const [date, setDate] = useState(null);
+    const [users, setUsers] = useState([]);
     const [addFilter, setAddFilter] = useState(true);
     const [filterOptions, setFilterOptions] = useState(false);
     const [newFilter, setNewFilter] = useState('');
     const [selectedGender, setSelectedGender] = useState('m');
     const [checkboxBoss, setCheckboxBoss] = useState(false);
     const [checkboxEmployee, setCheckboxEmployee] = useState(false);
-    const [publishToChannels, setPublishToChannels] = useState(false);
+    // const [publishToChannels, setPublishToChannels] = useState(false);
     const [mailingChanged, setMailingChanged] = useState(false);
     const [mailingUpdated, setMailingUpdated] = useState(false);
     
@@ -49,10 +50,11 @@ const MailingControlPanel = ({ selectedMailing }) => {
                 title,
                 organization,
                 department,
-                position: positions,
+                users,
+                position: position ? positions : null,
                 gender: gender ? selectedGender : null,
                 date: date ? date.toISOString() : null,
-                channels: publishToChannels ? channels : null,
+                // channels: publishToChannels ? channels : null,
             };
 
             if (selectedMailing && selectedMailing !== null) {
@@ -87,6 +89,8 @@ const MailingControlPanel = ({ selectedMailing }) => {
         setTitle(data.name || '');
         setOrganization(data.organization_filter || []);
         setDepartment(data.department_filter || []);
+        setUsers(data.user_filter || []);
+
         if (data.position_filter !== null && data.position_filter.length > 0) {
             setPosition(true);
             if (data.position_filter.includes('boss')) {
@@ -118,10 +122,10 @@ const MailingControlPanel = ({ selectedMailing }) => {
         setMailingChanged(true);
     };
 
-    const handleCheckboxChannels = (event) => {
-        setPublishToChannels(event.target.checked);
-        setMailingChanged(true);
-    };
+    // const handleCheckboxChannels = (event) => {
+    //     setPublishToChannels(event.target.checked);
+    //     setMailingChanged(true);
+    // };
 
     const handleFilterUpdate = (type, data) => {
         setNewFilter('');
@@ -132,6 +136,8 @@ const MailingControlPanel = ({ selectedMailing }) => {
             setOrganization(data);
         } else if (type == 'department') {
             setDepartment(data);
+        } else if (type == 'users') {
+            setUsers(data);
         }
     };
 
@@ -154,6 +160,10 @@ const MailingControlPanel = ({ selectedMailing }) => {
                         />
                     </label>
                 </div>
+
+                {(users.length > 0 || newFilter == 'users') && (
+                    <MailingFilter filterType='users' data={users} updateHandler={handleFilterUpdate} />
+                )}
 
                 {(organization.length > 0 || newFilter == 'organization') && (
                     <MailingFilter filterType='organization' data={organization} updateHandler={handleFilterUpdate} />
@@ -183,6 +193,13 @@ const MailingControlPanel = ({ selectedMailing }) => {
                             />
                             Рядовой сотрудник
                         </label>
+                        <button 
+                            class="filter__active--button button"
+                            onClick={() => {
+                                setPosition(false);
+                                setMailingChanged(true);
+                            }}
+                        >+</button>
                     </div>
                 )}
 
@@ -210,6 +227,13 @@ const MailingControlPanel = ({ selectedMailing }) => {
                             />
                             Ж
                         </label>
+                        <button 
+                            class="filter__active--button button"
+                            onClick={() => {
+                                setGender(false);
+                                setMailingChanged(true);
+                            }}
+                        >+</button>
                     </div>
                 )}
 
@@ -258,7 +282,7 @@ const MailingControlPanel = ({ selectedMailing }) => {
                     </div>
                 )}
 
-                <div class="control__checkbox">
+                {/* <div class="control__checkbox">
                     <label class="control__checkbox--label">
                         <input
                             class="control__checkbox--item"
@@ -268,10 +292,10 @@ const MailingControlPanel = ({ selectedMailing }) => {
                         />
                         Опубликовать в каналы
                     </label>
-                </div>
+                </div> */}
 
                 <div class="control__row">
-                    {(addFilter && !(organization.length > 0 && department.length > 0 && position && gender)) && (
+                    {(addFilter && users.length == 0 && !(organization.length > 0 && department.length > 0 && position && gender)) && (
                         <button
                             class="button control__row--item"
                             onClick={() => {
@@ -279,6 +303,16 @@ const MailingControlPanel = ({ selectedMailing }) => {
                                 setFilterOptions(true);
                             }}
                         >Добавить фильтр</button>
+                    )}
+
+                    {(organization.length == 0 && department.length == 0 && !position && !gender) && (
+                        <button
+                            class="button control__row--item"
+                            onClick={() => {
+                                setAddFilter(false);
+                                setNewFilter('users');
+                            }}
+                        >Выбрать пользователей</button>
                     )}
 
                     {/* <label>

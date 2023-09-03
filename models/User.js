@@ -14,22 +14,45 @@ class User {
     }
 
     getUserById(id) {
-        return this.db.select('id', 'name', 'tgid', 'status')
+        return this.db.select('id', 'tgchat', 'name', 'tgid', 'status')
             .from(this.tableName)
             .where({ id })
             .then((data) => data[0]);
     }
 
     getUsersByIds(ids) {
-        return this.db.select('id', 'name', 'status')
+        return this.db.select('id', 'tgchat', 'name', 'status')
             .from(this.tableName)
+            .whereNotNull('tgchat')
             .whereIn('id', ids);
     }
 
     getAll() {
-        return this.db.select('id', 'tgchat')
+        return this.db.select('id', 'tgchat', 'name', 'tgid')
             .from(this.tableName)
             .whereNotNull('tgchat');
+    }
+
+    getByIds(ids) {
+        return this.db.select('id', 'name', 'tgid')
+            .from(this.tableName)
+            .whereNotNull('tgchat')
+            .whereIn('id', ids);
+    }
+    
+    getUserByDuty(duty) {
+        return this.db.select('id', 'tgchat', 'name', 'tgid', 'status')
+            .from(this.tableName)
+            .where({ duty })
+            .then((data) => data[0]);
+    }
+
+    searchAll(query) {
+        return this.db.select('id', 'name', 'tgid')
+            .from(this.tableName)
+            .whereNotNull('tgchat')
+            .whereILike('name', `%${query}%`)
+            .orWhereILike('tgid', `%${query}%`);
     }
 
     getUsersWithFilter(filter) {

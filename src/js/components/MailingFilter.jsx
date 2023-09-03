@@ -19,38 +19,54 @@ const MailingFilter = ({ filterType, data, updateHandler }) => {
 
     useEffect(() => {
         const fetchData = async () => {
-            if (filterType == 'organization' || filterType == 'department') {
-                let url = '';
+            let url = '';
+
+            if (searchQuery != '') {
                 if (filterType == 'organization') {
-                    url = searchQuery != '' ? `api/organization/search?q=${searchQuery}` : 'api/organizations';
-                } else {
-                    url = searchQuery != '' ? `api/department/search?q=${searchQuery}&parent=${parentDep}` : `api/departments?parent=${parentDep}`;
+                    url = `api/organization/search?q=${searchQuery}`;
+                } else if (filterType == 'department') {
+                    url = `api/department/search?q=${searchQuery}&parent=${parentDep}`;
+                } else if (filterType == 'users') {
+                    url = `api/users/search?q=${searchQuery}`;
                 }
+            } else {
+                if (filterType == 'organization') {
+                    url = 'api/organizations';
+                } else if (filterType == 'department') {
+                    url = `api/departments?parent=${parentDep}`;
+                } else if (filterType == 'users') {
+                    url = 'api/users';
+                }
+            }
+
+            axios
+                .get(url)
+                .then((response) => {
+                    setLoadedData(response.data);
+                })
+                .catch((error) => {
+                    console.error('Error fetching data:', error);
+                });
+
+            if (data.length > 0 && activeItems.length == 0) {
+                const queryValues = data.join(',');
+
+                if (filterType == 'organization') {
+                    url = `api/organizations/active?id=${queryValues}`;
+                } else if (filterType == 'department') {
+                    url = `api/departments/active?id=${queryValues}`;
+                } else if (filterType == 'users') {
+                    url = `api/users/active?id=${queryValues}`;
+                }
+
                 axios
                     .get(url)
                     .then((response) => {
-                        setLoadedData(response.data);
+                        setActiveItems(response.data);
                     })
                     .catch((error) => {
                         console.error('Error fetching data:', error);
                     });
-            }
-
-            if (data.length > 0 && activeItems.length == 0) {
-                if (filterType == 'organization' || filterType == 'department') {
-                    const queryValues = data.join(',');
-
-                    let url = filterType == 'organization' ? `api/organizations/active?id=${queryValues}` : `api/departments/active?id=${queryValues}`;
-
-                    axios
-                        .get(url)
-                        .then((response) => {
-                            setActiveItems(response.data);
-                        })
-                        .catch((error) => {
-                            console.error('Error fetching data:', error);
-                        });
-                }
             }
         };
 
@@ -123,7 +139,7 @@ const MailingFilter = ({ filterType, data, updateHandler }) => {
             <input
                 class="filter__input input"
                 type="text"
-                placeholder={filterType == 'organization' ? 'Организация' : 'Подразделение'}
+                placeholder={filterType == 'organization' ? 'Организация' : (filterType == 'department' ? 'Подразделение' : 'Пользователь')}
                 onChange={handleInput}
             />
             <div class="filter__list">
@@ -132,23 +148,32 @@ const MailingFilter = ({ filterType, data, updateHandler }) => {
                         key={index}
                         className={item.active ? 'filter__list--item active' : 'filter__list--item'}
                         onClick={() => selectItem(index)}
-                    >{item.name}</div>
+                    >
+                        <span>{item.name}</span>
+                        {filterType == 'users' && (
+                            <a class="link" href={'https://t.me/' + item.tgid} target='_blank' rel='nofollow noopener'>{' @' + item.tgid}</a>
+                        )}
+                    </div>
                 ))}
             </div>
             
-            {/* {(filterType == 'organization' || filterType == 'department') && ( */}
             <div class="filter__active">
                 {activeItems.map((item, index) => (
                     <div className={index == parentIndex ? 'filter__active--item active' : 'filter__active--item'} key={index}>
                         <div 
                             class="filter__active--text"
                             onClick={() => selectParent(item.id, index)}
-                        >{item.name}</div>
+                        >
+                            <span>{item.name}</span>
+                            {filterType == 'users' && (
+                                <a class="link" href={'https://t.me/' + item.tgid} target='_blank' rel='nofollow noopener'>{' @' + item.tgid}</a>
+                            )}
+                        </div>
                         <button class="filter__active--button button" onClick={() => removeItem(item.id)}>+</button>
                     </div>
                 ))}
             </div>
-            {/* )} */}
+            
             {(filterChanged) && (
                 <button class="button" onClick={handleSave}>Сохранить фильтр</button>
             )}

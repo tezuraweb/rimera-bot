@@ -3,8 +3,7 @@ const User = require('./models/User');
 const News = require('./models/News');
 const Department = require('./models/Department');
 const Mailing = require('./models/Mailing');
-
-const TG_CHANNEL = '@test_rimera';
+const Appeal = require('./models/Appeal');
 
 class SceneGenerator {
     AuthScene() {
@@ -80,7 +79,7 @@ class SceneGenerator {
         menuScene.enter((ctx) => {
             ctx.reply(
                 "Выберите пункт меню:",
-                Markup.keyboard(["Предложить новость"]).oneTime().resize(),
+                Markup.keyboard(["Предложить новость", "Обратная связь"]).oneTime().resize(),
             );
         });
 
@@ -88,7 +87,87 @@ class SceneGenerator {
             return ctx.scene.enter('ADD_NEWS_SCENE');
         });
 
+        menuScene.hears("Обратная связь", (ctx) => {
+            return ctx.scene.enter('FEEDBACK_SCENE');
+        });
+
         return menuScene;
+    }
+
+    FeedbackScene() {
+        const feedbackScene = new Scenes.BaseScene('FEEDBACK_SCENE');
+
+        feedbackScene.enter((ctx) => {
+            ctx.session.myData = {
+                type: '',
+            };
+
+            ctx.reply(
+                "Выберите пункт меню:",
+                Markup.keyboard(["Предложить улучшение", "Сообщить о проблеме", "Назад"]).oneTime().resize(),
+            );
+        });
+
+        feedbackScene.hears("Предложить улучшение", (ctx) => {
+            ctx.session.myData.type = 'feature';
+
+            ctx.reply(
+                "Напишите, что вы хотели бы улучшить. В ближайшее время вам ответит администратор",
+                Markup.keyboard(["Отмена"]).oneTime().resize(),
+            );
+        });
+
+        feedbackScene.hears("Сообщить о проблеме", (ctx) => {
+            ctx.session.myData.type = 'problem';
+
+            ctx.reply(
+                "Опишите вашу проблему. В ближайшее время вам ответит администратор",
+                Markup.keyboard(["Отмена"]).oneTime().resize(),
+            );
+        });
+
+        feedbackScene.hears("Назад", (ctx) => {
+            return ctx.scene.enter('MAIN_MENU_SCENE');
+        });
+
+        feedbackScene.hears("Отмена", (ctx) => {
+            return ctx.scene.reenter();
+        });
+
+        feedbackScene.on("message", async (ctx) => {
+            if (ctx.message.text == '') {
+                ctx.reply(
+                    "Задайте текст обращения!",
+                    Markup.keyboard(["Отмена"]).oneTime().resize(),
+                );
+            } else {
+                try {
+                    let user = await User.getUser(ctx.from.id);
+
+                    let appeal = await Appeal.create(user.id, ctx.message.text, ctx.session.myData.type);
+
+                    user = await User.getUserByDuty(ctx.session.myData.type);
+
+                    if (user) {
+                        if (ctx.session.myData.type == 'problem') {
+                            ctx.telegram.sendMessage(user.tgchat, 'Поступила новая жалоба от пользователя!');
+                        } else if (ctx.session.myData.type == 'feature') {
+                            ctx.telegram.sendMessage(user.tgchat, 'Поступило новое предложение от пользователя!');
+                        }
+                    }
+                } catch (e) {
+                    ctx.reply("Ошибка!");
+                    console.log(e.message);
+                    return ctx.scene.reenter();
+                }
+            }
+
+            ctx.reply("Ваше обращение зарегистрировано!");
+
+            return ctx.scene.enter('MAIN_MENU_SCENE');
+        });
+
+        return feedbackScene;
     }
 
     AdminMenuScene() {
@@ -97,7 +176,7 @@ class SceneGenerator {
         adminMenuScene.enter((ctx) => {
             ctx.reply(
                 "Выберите пункт меню:",
-                Markup.keyboard(["Предложить новость", "Создать рассылку"]).oneTime().resize(),
+                Markup.keyboard(["Предложить новость", "Создать рассылку", "Обращения"]).oneTime().resize(),
             );
         });
 
@@ -109,12 +188,141 @@ class SceneGenerator {
             return ctx.scene.enter('MAILING_SCENE');
         });
 
+        adminMenuScene.hears("Обращения", (ctx) => {
+            return ctx.scene.enter('APPEAL_SCENE');
+        });
 
         adminMenuScene.hears("Назад", (ctx) => {
             return ctx.scene.enter('ADMIN_MENU_SCENE');
         });
 
         return adminMenuScene;
+    }
+
+    AppealScene() {
+        const appealScene = new Scenes.BaseScene('APPEAL_SCENE');
+
+        appealScene.enter((ctx) => {
+            ctx.session.myData = {
+                list: null,
+                count: 0,
+                index: -1,
+            };
+
+            ctx.reply(
+                "Выберите пункт меню:",
+                Markup.keyboard(["Предложения", "Жалобы", "Назад"]).oneTime().resize(),
+            );
+        });
+
+        appealScene.hears("Предложения", async (ctx) => {
+            try {
+                ctx.session.myData.list = await Appeal.getFeatures();
+                ctx.session.myData.count = ctx.session.myData.list.length;
+
+                if (ctx.session.myData.index + 1 < ctx.session.myData.count) {
+                    ctx.reply(
+                        `Обращений: ${ctx.session.myData.count}`,
+                        Markup.keyboard(["Показать следующее обращение", "Назад"]).oneTime().resize(),
+                    );
+                } else {
+                    ctx.reply(
+                        `Обращений: ${ctx.session.myData.count}`,
+                        Markup.keyboard(["Назад"]).oneTime().resize(),
+                    );
+                }
+            } catch (e) {
+                ctx.reply("Ошибка!");
+                console.log(e.message);
+                return ctx.scene.enter('ADMIN_MENU_SCENE');
+            }
+        });
+
+        appealScene.hears("Жалобы", async (ctx) => {
+            try {
+                ctx.session.myData.list = await Appeal.getProblems();
+                ctx.session.myData.count = ctx.session.myData.list.length;
+
+                if (ctx.session.myData.index + 1 < ctx.session.myData.count) {
+                    ctx.reply(
+                        `Обращений: ${ctx.session.myData.count}`,
+                        Markup.keyboard(["Показать следующее обращение", "Назад"]).oneTime().resize(),
+                    );
+                } else {
+                    ctx.reply(
+                        `Обращений: ${ctx.session.myData.count}`,
+                        Markup.keyboard(["Назад"]).oneTime().resize(),
+                    );
+                }
+            } catch (e) {
+                ctx.reply("Ошибка!");
+                console.log(e.message);
+                return ctx.scene.enter('ADMIN_MENU_SCENE');
+            }
+        });
+
+        appealScene.hears("Показать следующее обращение", async (ctx) => {
+            try {
+                ctx.session.myData.index += 1;
+
+                let content = ctx.session.myData.list[ctx.session.myData.index];
+                let user = await User.getUserById(content.creator);
+                ctx.reply(content.text);
+
+                if (ctx.session.myData.index + 1 < ctx.session.myData.count) {
+                    ctx.reply(
+                        `Автор обращения: ${user.name} (@${user.tgid})`,
+                        Markup.keyboard(["Ответить на обращение", "Показать следующее обращение", "Назад"]).oneTime().resize(),
+                    );
+                } else {
+                    ctx.reply(
+                        `Автор обращения: ${user.name} (@${user.tgid})`,
+                        Markup.keyboard(["Ответить на обращение", "Назад"]).oneTime().resize(),
+                    );
+                }
+            } catch (e) {
+                ctx.reply("Не удалось отобразить сообщение!");
+                console.log(e.message);
+                return ctx.scene.reenter();
+            }
+        });
+
+        appealScene.hears("Ответить на обращение", (ctx) => {
+            ctx.reply(
+                "Напишите сообщение, при необходимости добавьте медиа-файлы. После отправки ответ будет отправлен пользователю от лица бота.",
+                Markup.keyboard(["Отмена"]).oneTime().resize(),
+            );
+        });
+
+        appealScene.hears("Назад", (ctx) => {
+            return ctx.scene.enter('ADMIN_MENU_SCENE');
+        });
+
+        appealScene.hears("Отмена", (ctx) => {
+            return ctx.scene.reenter();
+        });
+
+        appealScene.on("message", async (ctx) => {
+            try {
+                let content = ctx.session.myData.list[ctx.session.myData.index];
+                let user = await User.getUserById(content.creator);
+
+                if (user.tgchat !== null) {
+                    ctx.telegram.sendMessage(user.tgchat, 'Ответ на ваше обращение от администратора:');
+                    ctx.copyMessage(user.tgchat);
+                    await Appeal.delete(content.id);
+                }
+            } catch (e) {
+                ctx.reply("Ошибка!");
+                console.log(e.message);
+                return ctx.scene.enter('ADMIN_MENU_SCENE');
+            }
+
+            ctx.reply("Ответ пользователю успешно отправлен!");
+            return ctx.scene.enter('ADMIN_MENU_SCENE');
+        });
+
+        return appealScene;
     }
 
     AddNewsScene() {
@@ -127,6 +335,7 @@ class SceneGenerator {
                 newsId: -1,
                 status: 'common',
             };
+
             try {
                 let user = await User.getUser(ctx.from.id);
 
@@ -391,7 +600,7 @@ class SceneGenerator {
             if (ctx.session.myData.mode == 'send') {
                 try {
                     let users = [];
-                    let channels = [];
+                    // let channels = [];
                     let mailing = [];
                     let promises = [];
 
@@ -422,9 +631,9 @@ class SceneGenerator {
 
                             users = await User.getUsersWithFilter(filter);
 
-                            if (mailing.channels !== null && mailing.channels.length > 0) {
-                                channels = mailing.channels;
-                            }
+                            // if (mailing.channels !== null && mailing.channels.length > 0) {
+                            //     channels = mailing.channels;
+                            // }
                         }
                     } else {
                         users = await User.getAll();
@@ -448,9 +657,9 @@ class SceneGenerator {
                         }
                     });
 
-                    channels.forEach(channel => {
-                        promises.push(sendMessage(channel));
-                    });
+                    // channels.forEach(channel => {
+                    //     promises.push(sendMessage(channel));
+                    // });
 
                     const res = await Promise.all(promises);
                     
@@ -505,7 +714,7 @@ class SceneGenerator {
             try {
                 const content = ctx.session.myData.newsList[ctx.session.myData.newsIndex];
                 let users = [];
-                let channels = [];
+                // let channels = [];
                 let mailing = [];
                 let promises = [];
 
@@ -536,9 +745,9 @@ class SceneGenerator {
 
                         users = await User.getUsersWithFilter(filter);
 
-                        if (mailing.channels !== null && mailing.channels.length > 0) {
-                            channels = mailing.channels;
-                        }
+                        // if (mailing.channels !== null && mailing.channels.length > 0) {
+                        //     channels = mailing.channels;
+                        // }
                     }
                 } else {
                     users = await User.getAll();
@@ -572,9 +781,9 @@ class SceneGenerator {
                     }
                 });
 
-                channels.forEach(channel => {
-                    promises.push(sendMessage(channel));
-                });
+                // channels.forEach(channel => {
+                //     promises.push(sendMessage(channel));
+                // });
 
                 const res = await Promise.all(promises);
 
