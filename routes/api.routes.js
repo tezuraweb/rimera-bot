@@ -4,6 +4,7 @@ const News = require('../models/News');
 const Mailing = require('../models/Mailing');
 const Organization = require('../models/Organization');
 const Department = require('../models/Department');
+const User = require('../models/User');
 const bot = require('../bot');
 
 const router = express.Router();
@@ -80,7 +81,7 @@ router
     .route('/mailing-create')
     .post(async (req, res) => {
         try {
-            const data = pick(req.body, 'title', 'organization', 'department', 'position', 'gender', 'date', 'channels');
+            const data = pick(req.body, 'title', 'organization', 'department', 'users', 'position', 'gender', 'date', 'channels');
 
             const mailing = await Mailing.create(data);
 
@@ -95,7 +96,7 @@ router
     .post(async (req, res) => {
         try {
             const id = parseInt(req.params.id);
-            const data = pick(req.body, 'title', 'organization', 'department', 'position', 'gender', 'date', 'channels');
+            const data = pick(req.body, 'title', 'organization', 'department', 'users', 'position', 'gender', 'date', 'channels');
 
             const mailing = await Mailing.update(id, data);
 
@@ -176,6 +177,33 @@ router
     });
 
 router
+    .route('/users')
+    .get(async (req, res) => {
+        try {
+            const users = await User.getAll();
+
+            res.json(users);
+        } catch (err) {
+            res.status(400).json({ error: err });
+        }
+    });
+
+router
+    .route('/users/active')
+    .get(async (req, res) => {
+        try {
+            const idsLine = req.query.id;
+            const ids = idsLine.split(',').map(id => parseInt(id));
+
+            const users = await User.getByIds(ids);
+
+            res.json(users);
+        } catch (err) {
+            res.status(400).json({ error: err });
+        }
+    });
+
+router
     .route('/organization/search')
     .get(async (req, res) => {
         try {
@@ -199,6 +227,20 @@ router
             const deps = (parent == 0 || isNaN(parent)) ? await Department.searchAll(query) : await Department.searchSubdivision(query, parent);
 
             res.json(deps);
+        } catch (err) {
+            res.status(400).json({ error: err });
+        }
+    });
+
+router
+    .route('/users/search')
+    .get(async (req, res) => {
+        try {
+            const query = req.query.q;
+
+            const orgs = await User.searchAll(query);
+
+            res.json(orgs);
         } catch (err) {
             res.status(400).json({ error: err });
         }
