@@ -19,7 +19,7 @@ const MailingComponent = () => {
     return (
         <div class="mailing__wrapper">
             <MailingList updateSelectedMailing={handleMailingSelect} />
-            <button class="list__button list__button--outer button" onClick={createNewMiling}>Создать новую рассылку</button>
+            <button class="list__button list__button--outer button button--blue" onClick={createNewMiling}>Создать новую рассылку</button>
             <MailingControlPanel key={selectedMailingKey} selectedMailing={selectedMailing} />
         </div>
     );

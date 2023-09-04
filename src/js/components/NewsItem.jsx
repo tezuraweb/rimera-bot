@@ -13,7 +13,7 @@ const NewsItem = ({ news, onSelect }) => {
                     <a class="link" href={'https://t.me/' + news.username} target='_blank' rel='nofollow noopener'>{'@' + news.username}</a>
                 </div>
                 
-                <button class="list__button--right button" onClick={handleSelect}>Выбрать</button>
+                <button class="list__button--right button button--green" onClick={handleSelect}>Выбрать</button>
             </div>
             
         </div>

@@ -21,7 +21,7 @@ const MailingControlPanel = ({ selectedMailing }) => {
     // const [publishToChannels, setPublishToChannels] = useState(false);
     const [mailingChanged, setMailingChanged] = useState(false);
     const [mailingUpdated, setMailingUpdated] = useState(false);
-    
+    const [mode, setMode] = useState('filters');    
 
     const channels = ['@test_rimera'];
 
@@ -86,25 +86,32 @@ const MailingControlPanel = ({ selectedMailing }) => {
     }, [mailingUpdated]);
 
     const setData = (data) => {
-        setTitle(data.name || '');
-        setOrganization(data.organization_filter || []);
-        setDepartment(data.department_filter || []);
-        setUsers(data.user_filter || []);
+        if (data.user_filter != null && data.user_filter.length > 0) {
+            setMode('users');
+            setUsers(data.user_filter || []);
+        } else {
+            setMode('filters');
+            setOrganization(data.organization_filter || []);
+            setDepartment(data.department_filter || []);
+            
 
-        if (data.position_filter !== null && data.position_filter.length > 0) {
-            setPosition(true);
-            if (data.position_filter.includes('boss')) {
-                setCheckboxBoss(true);
+            if (data.position_filter !== null && data.position_filter.length > 0) {
+                setPosition(true);
+                if (data.position_filter.includes('boss')) {
+                    setCheckboxBoss(true);
+                }
+                if (data.position_filter.includes('employee')) {
+                    setCheckboxEmployee(true);
+                }
             }
-            if (data.position_filter.includes('employee')) {
-                setCheckboxEmployee(true);
+            if (data.gender_filter !== null) {
+                setGender(true);
+                setSelectedGender(data.gender_filter);
             }
         }
-        if (data.gender_filter !== null) {
-            setGender(true);
-            setSelectedGender(data.gender_filter);
-        }
-        setDate(data.date || null);
+
+        setTitle(data.name || '');
+        // setDate(data.date || null);
     };
 
     const handleGenderChange = (event) => {
@@ -143,12 +150,36 @@ const MailingControlPanel = ({ selectedMailing }) => {
 
     return (
         <div class="control">
-            <div class="control__wrapper">
-                <h2 class="control__title">Панель управления рассылкой</h2>
+            <h2 class="control__title">Управление рассылкой</h2>
 
+            <div class="control__tabs">
+                <div
+                    class={(users.length != 0) ? 'control__tab control__tab--disabled' : 'control__tab'}
+                    onClick={() => {
+                        if (users.length == 0) {
+                            setAddFilter(true);
+                            setMode('filters');
+                            setNewFilter('');
+                        }
+                    }}
+                >Фильтры по организациям</div>
+                <div
+                    class={!(organization.length == 0 && department.length == 0 && !position && !gender) ? 'control__tab control__tab--disabled' : 'control__tab'}
+                    onClick={() => {
+                        if (organization.length == 0 && department.length == 0 && !position && !gender) {
+                            setAddFilter(false);
+                            setMode('users');
+                            setAddFilter(false);
+                            setNewFilter('users');
+                        }
+                    }}
+                >Адресная коммуникация</div>
+            </div>
+
+            <div class="control__wrapper">
                 <div class="control__name">
                     <label class="control__label">
-                        Название:
+                        <span class="control__label--text">Название:</span>
                         <input
                             class="control__input input"
                             type="text"
@@ -159,6 +190,10 @@ const MailingControlPanel = ({ selectedMailing }) => {
                             }}
                         />
                     </label>
+
+                    <div class="tooltip tooltip--blue tooltip--bottom">
+                        <span class="tooltip__text">Название необходимо для удобного поиска нужной рассылки внутри самого бота. Используйте названия, которые понятны вам и вашим коллегам.</span>
+                    </div>
                 </div>
 
                 {(users.length > 0 || newFilter == 'users') && (
@@ -194,7 +229,7 @@ const MailingControlPanel = ({ selectedMailing }) => {
                             Рядовой сотрудник
                         </label>
                         <button 
-                            class="filter__active--button button"
+                            class="filter__active--button button button--blue"
                             onClick={() => {
                                 setPosition(false);
                                 setMailingChanged(true);
@@ -228,7 +263,7 @@ const MailingControlPanel = ({ selectedMailing }) => {
                             Ж
                         </label>
                         <button 
-                            class="filter__active--button button"
+                            class="filter__active--button button button--blue"
                             onClick={() => {
                                 setGender(false);
                                 setMailingChanged(true);
@@ -241,7 +276,7 @@ const MailingControlPanel = ({ selectedMailing }) => {
                     <div class="control__row">
                         {(organization.length == 0) && (
                             <button
-                                class="button control__row--item"
+                                class="button control__row--item button--blue"
                                 onClick={() => {
                                     setNewFilter('organization');
                                     setFilterOptions(false);
@@ -250,7 +285,7 @@ const MailingControlPanel = ({ selectedMailing }) => {
                         )}
                         {(department.length == 0) && (
                             <button
-                                class="button control__row--item"
+                                class="button control__row--item button--blue"
                                 onClick={() => {
                                     setNewFilter('department');
                                     setFilterOptions(false);
@@ -259,7 +294,7 @@ const MailingControlPanel = ({ selectedMailing }) => {
                         )}
                         {(!position) && (
                             <button
-                                class="button control__row--item"
+                                class="button control__row--item button--blue"
                                 onClick={() => {
                                     setPosition(true);
                                     setFilterOptions(false);
@@ -270,7 +305,7 @@ const MailingControlPanel = ({ selectedMailing }) => {
                         )}
                         {(!gender) && (
                             <button
-                                class="button control__row--item"
+                                class="button control__row--item button--blue"
                                 onClick={() => {
                                     setGender(true);
                                     setFilterOptions(false);
@@ -297,22 +332,12 @@ const MailingControlPanel = ({ selectedMailing }) => {
                 <div class="control__row">
                     {(addFilter && users.length == 0 && !(organization.length > 0 && department.length > 0 && position && gender)) && (
                         <button
-                            class="button control__row--item"
+                            class="button control__row--item button--blue"
                             onClick={() => {
                                 setAddFilter(false);
                                 setFilterOptions(true);
                             }}
                         >Добавить фильтр</button>
-                    )}
-
-                    {(organization.length == 0 && department.length == 0 && !position && !gender) && (
-                        <button
-                            class="button control__row--item"
-                            onClick={() => {
-                                setAddFilter(false);
-                                setNewFilter('users');
-                            }}
-                        >Выбрать пользователей</button>
                     )}
 
                     {/* <label>
@@ -322,7 +347,7 @@ const MailingControlPanel = ({ selectedMailing }) => {
                     </label> */}
 
                     {mailingChanged && (
-                        <button class="button control__row--item" onClick={() => setMailingUpdated(true)}>Сохранить</button>
+                        <button class="button control__row--item button--blue" onClick={() => setMailingUpdated(true)}>Сохранить</button>
                     )}
                 </div>
 

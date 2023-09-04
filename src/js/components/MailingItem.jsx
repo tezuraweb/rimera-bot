@@ -8,7 +8,9 @@ const MailingItem = ({ mailing, onSelect }) => {
     return (
         <div class="list__item">
             <div class="list__text">{mailing.name}</div>
-            <button class="list__button--right button" onClick={handleSelect}>Выбрать</button>
+            <div class="list__row">
+                <button class="list__button--left button button--blue" onClick={handleSelect}>Выбрать</button>
+            </div>
         </div>
     );
 };

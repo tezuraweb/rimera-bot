@@ -9,6 +9,7 @@
         padding: 35px 0 0 60px;
         overflow-y: scroll;
         background-color: $grey;
+        box-shadow: 0 0 5px $grey;
     }
 
     &__button {
@@ -17,9 +18,10 @@
 
         &--right {
             margin-left: auto;
-            background-color: $rimeraGreen;
-            padding: 10px 22px;
-            border-bottom-right-radius: 5px;
+        }
+
+        &--left {
+            margin-right: auto;
         }
 
         &--outer {
@@ -42,7 +44,6 @@
 
     &__link {
         display: block;
-        padding: 15px 0 25px 35px;
     }
 
     &__text {
@@ -54,6 +55,8 @@
 
     &__row {
         display: flex;
+        padding: 15px 35px;
+        align-items: center;
     }
 
     @media (max-width: $mobile-breakpoint) {

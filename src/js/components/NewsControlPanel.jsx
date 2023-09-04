@@ -76,9 +76,8 @@ const NewsControlPanel = ({ selectedNews }) => {
                             <span>Автор: </span>
                             <a class="link" href={'https://t.me/' + selectedNews.username} target='_blank' rel='nofollow noopener'>{'@' + selectedNews.username}</a>
                             <div class="control__description">Текст новости:
-                                <div class="tooltip">
-                                        <span class="tooltip__text">Вы можете отредактировать текст новости, для этого кликните в поле ниже и начните
-                                            вводить текст.  Затем кликните по кнопке “Сохранить”. После сохранения выйдите из панели администратора и опубликуйте ваши новости через бота.</span>
+                                <div class="tooltip tooltip--green">
+                                    <span class="tooltip__text">Вы можете отредактировать текст новости, для этого кликните в поле ниже и начните вводить текст.  Затем кликните по кнопке “Сохранить”. После сохранения выйдите из панели администратора и опубликуйте ваши новости через бота.</span>
                                 </div>
                             </div>
                         </div>
@@ -102,7 +101,7 @@ const NewsControlPanel = ({ selectedNews }) => {
                             </div>
                         )}
                         {newsChanged && (
-                            <button class="control__button button" onClick={() => setNewsUpdated(true)}>Сохранить</button>
+                            <button class="control__button button button--green" onClick={() => setNewsUpdated(true)}>Сохранить</button>
                         )}
                     </div>
                 </div>

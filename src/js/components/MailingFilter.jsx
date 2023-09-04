@@ -11,6 +11,19 @@ const MailingFilter = ({ filterType, data, updateHandler }) => {
     const [parentIndex, setParentIndex] = useState(-1);
     const [filterChanged, setFilterChanged] = useState(false);
 
+    const info =  {
+        'organization': {
+            title: 'Организации',
+            summary: 'Выберите одну или несколько организаций для рассылки',
+            tooltip: 'Выберите нужные организации из списка, вы также можете воспользоваться поиском: для этого начните печатать название в поле “Организации”. Если ошибетесь - нажмите на крестик рядом с лишним фильтром.'
+        },
+        'department': {
+            title: 'Подразделения',
+            summary: 'Выберите одно или несколько подразделений для рассылки',
+            tooltip: 'Выберите нужные подразделения из списка, вы также можете воспользоваться поиском: для этого начните печатать название в поле “Подразделения”. Если ошибетесь - нажмите на крестик рядом с лишним фильтром. Для выбора дочерних подразделений нажмите на название выбранного отдела, и в списке отобразятся его дочерние подразделения. Подразделения всех уровней также доступны при поиске.'
+        }
+    }
+
     const debouncedSearch = useRef(
         debounce((query) => {
             setSearchQuery(query);
@@ -136,6 +149,18 @@ const MailingFilter = ({ filterType, data, updateHandler }) => {
 
     return (
         <div class="filter">
+            {(info[filterType]) && (
+                <div class="filter__heading">
+                    <div class="filter__title">{info[filterType].title}</div>
+                    <div class="filter__description">
+                        <span>{info[filterType].summary}</span>
+                        <div class="tooltip tooltip--blue">
+                            <span class="tooltip__text">{info[filterType].tooltip}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
             <input
                 class="filter__input input"
                 type="text"
@@ -169,13 +194,13 @@ const MailingFilter = ({ filterType, data, updateHandler }) => {
                                 <a class="link" href={'https://t.me/' + item.tgid} target='_blank' rel='nofollow noopener'>{' @' + item.tgid}</a>
                             )}
                         </div>
-                        <button class="filter__active--button button" onClick={() => removeItem(item.id)}>+</button>
+                        <button class="filter__active--button button button--blue" onClick={() => removeItem(item.id)}>+</button>
                     </div>
                 ))}
             </div>
             
             {(filterChanged) && (
-                <button class="button" onClick={handleSave}>Сохранить фильтр</button>
+                <button class="button button--blue" onClick={handleSave}>Сохранить фильтр</button>
             )}
         </div>
     );

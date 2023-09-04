@@ -52,7 +52,7 @@ const NewsList = ({ updateSelectedNews }) => {
             </div>
             
             {newsList.length < newsCount && (
-                <button class="list__button button" onClick={loadMoreNews}>Загрузить еще новости</button>
+                <button class="list__button button button--green" onClick={loadMoreNews}>Загрузить еще новости</button>
             )}
         </div>
     );
