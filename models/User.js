@@ -55,6 +55,26 @@ class User {
             .orWhereILike('tgid', `%${query}%`);
     }
 
+    getStats() {
+        return this.db.select('status')
+            .from(this.tableName)
+            .count('* as total_count')
+            .select(this.db.raw('SUM(CASE WHEN "tgchat" IS NOT NULL THEN 1 ELSE 0 END) as tgchat_count'))
+            .groupBy('status')
+            .then(data => {
+                let dataDict = data.reduce((acc, curr) => {
+                    acc[curr.status] = {
+                        total_count: curr.total_count,
+                        tgchat_count: curr.tgchat_count,
+                    }
+
+                    return acc;
+                }, {})
+                
+                return dataDict;
+            })
+    }
+
     getUsersWithFilter(filter) {
         return this.db.select('id', 'tgchat')
             .from(this.tableName)

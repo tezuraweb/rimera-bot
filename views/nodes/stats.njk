@@ -1,0 +1,24 @@
+{% set pageTitle = 'Новости' %}
+
+{% extends "layouts/default.njk" %}
+
+{% block bodyContent %}
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <h1 class="section__title">Статистика подключений</h1>
+
+                <div class="section__subtitle">Администраторы</div>
+                <div class="section__text">{{ stats.admin.total_count }} администратор{% if stats.admin.total_count % 10 in [2, 3, 4] %}a{% elif stats.admin.total_count % 10 != 1 %}ов{% endif %}</div>
+
+                <div class="section__subtitle">Пользователи</div>
+                <div class="section__text">{{ stats.common.tgchat_count }} из {{ stats.common.total_count }} сотрудников</div>
+
+                {# <div class="section__description">Новые сотрудники</div>
+                <div class="section__text">15 новых сотрудников на 3 сентября 2023 г.15 новых сотрудников на 3 сентября 2023 г.</div> #}
+            </div>
+        </section>
+    </main>
+
+{% endblock %}

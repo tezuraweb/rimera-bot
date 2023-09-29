@@ -9,11 +9,25 @@ const User = require('../models/User');
 const router = express.Router();
 
 router
+    .route('/')
+    .get(auth, (req, res) => {
+        try {
+            if (!req.user) {
+                return res.redirect('/login');
+            } else {
+                return res.redirect('/news');
+            }
+        } catch (err) {
+            console.log(err);
+        }
+    });
+
+router
     .route('/news')
     .get(auth, (req, res) => {
         try {
             if (!req.user) {
-                return res.redirect('/login')
+                return res.redirect('/login');
             }
     
             return res.render('nodes/news', { user: req.user });
@@ -26,10 +40,22 @@ router
     .route('/mailing')
     .get(auth, (req, res) => {
         if (!req.user) {
-            return res.redirect('/login')
+            return res.redirect('/login');
         }
         
         return res.render('nodes/mailing', { user: req.user });
+    });
+
+router
+    .route('/stats')
+    .get(auth, async (req, res) => {
+        if (!req.user) {
+            return res.redirect('/login');
+        }
+
+        const stats = await User.getStats();
+        
+        return res.render('nodes/stats', { user: req.user, stats: stats });
     });
 
 router
