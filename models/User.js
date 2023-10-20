@@ -56,20 +56,31 @@ class User {
     }
 
     getStats() {
-        return this.db.select('status')
+        return this.db.select('users.status', 'organizations.name')
             .from(this.tableName)
+            .join('organizations', 'users.organization', '=', 'organizations.id')
             .count('* as total_count')
             .select(this.db.raw('SUM(CASE WHEN "tgchat" IS NOT NULL THEN 1 ELSE 0 END) as tgchat_count'))
-            .groupBy('status')
+            .groupBy('status', 'organizations.name')
             .then(data => {
                 let dataDict = data.reduce((acc, curr) => {
-                    acc[curr.status] = {
-                        total_count: curr.total_count,
-                        tgchat_count: curr.tgchat_count,
+                    if (curr.status == 'admin') {
+                        acc.admin_total += parseInt(curr.total_count);
+                        acc.admin_tgchat += parseInt(curr.tgchat_count);
+                    } else {
+                        acc.common_total += parseInt(curr.total_count);
+                        acc.common_tgchat += parseInt(curr.tgchat_count);
+                        acc.common_list.push(curr);
                     }
 
                     return acc;
-                }, {})
+                }, {
+                    admin_total: 0,
+                    admin_tgchat: 0,
+                    common_total: 0,
+                    common_tgchat: 0,
+                    common_list: [],
+                })
                 
                 return dataDict;
             })

@@ -10,11 +10,20 @@
                 <h1 class="section__title">Статистика подключений</h1>
 
                 <div class="section__subtitle">Администраторы</div>
-                <div class="section__text">{{ stats.admin.total_count }} администратор{% if stats.admin.total_count % 10 in [2, 3, 4] %}a{% elif stats.admin.total_count % 10 != 1 %}ов{% endif %}</div>
+                <div class="section__text">{{ stats.admin_tgchat }} администратор{% if stats.admin_tgchat % 10 in [2, 3, 4] %}a{% elif stats.admin_tgchat % 10 != 1 %}ов{% endif %} из {{ stats.admin_total }}</div>
 
                 <div class="section__subtitle">Пользователи</div>
-                <div class="section__text">{{ stats.common.tgchat_count }} из {{ stats.common.total_count }} сотрудников</div>
+                <div class="section__text">{{ stats.common_tgchat }} из {{ stats.common_total }} сотрудников</div>
 
+                <ul class="organizations__list">
+                    {% for item in stats.common_list %}
+                        <li class="organizations__item">
+                            <span class="organizations__name">{{ item.name }}:</span>
+                            <span class="organizations__count">{{ item.tgchat_count }} из {{ item.total_count }} сотрудников</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+                
                 {# <div class="section__description">Новые сотрудники</div>
                 <div class="section__text">15 новых сотрудников на 3 сентября 2023 г.15 новых сотрудников на 3 сентября 2023 г.</div> #}
             </div>
