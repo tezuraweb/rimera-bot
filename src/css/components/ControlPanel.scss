@@ -70,6 +70,10 @@
     &__row {
         display: flex;
 
+        &--margin {
+            margin-bottom: 20px;
+        }
+
         &--item {
             margin-right: 5px;
 

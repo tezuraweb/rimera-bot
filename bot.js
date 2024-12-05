@@ -1,58 +1,54 @@
-const Config = require('./config');
 const { Telegraf, Scenes, session } = require('telegraf');
-const SceneGenerator = require('./scenes');
+const Config = require('./config');
 const { dateTimeNow } = require('./utils/logging');
+const userAuth = require('./middleware/bot-auth');
+
+const AuthScene = require('./scenes/auth.scene');
+const MainMenuScene = require('./scenes/main-menu.scene');
+const AdminMenuScene = require('./scenes/admin-menu.scene');
+const NewsScene = require('./scenes/add-news.scene');
+const MailingScene = require('./scenes/mailing.scene');
+// const FeedbackScene = require('./scenes/feedback.scene');
+// const AppealScene = require('./scenes/appeal.scene');
 
 const createBot = () => {
     try {
-        const bot = new Telegraf(Config.TELEGRAM_TOKEN, {});
+        const bot = new Telegraf(Config.TELEGRAM_TOKEN);
 
-        const curScene = new SceneGenerator();
-        const authScene = curScene.AuthScene();
-        const menuScene = curScene.MainMenuScene();
-        const adminMenuScene = curScene.AdminMenuScene();
-        const newsScene = curScene.AddNewsScene();
-        const mailingScene = curScene.MailingScene();
-        const feedbackScene = curScene.FeedbackScene();
-        const appealScene = curScene.AppealScene();
+        const scenes = [
+            new AuthScene(),
+            new MainMenuScene(),
+            new AdminMenuScene(),
+            new NewsScene(),
+            new MailingScene(),
+            // new FeedbackScene,
+            // new AppealScene,
+        ];
+
+        const stage = new Scenes.Stage(scenes);
+
+        bot.use(session({
+            defaultSession: () => ({
+                user: null,
+            })
+        }));
+
+        bot.use(userAuth);
+        bot.use(stage.middleware());
 
         bot.use(async (ctx, next) => {
             const start = new Date();
             await next();
             const ms = new Date() - start;
-            // console.log(
-            //     '%s Chat id: %s response time: %sms',
-            //     dateTimeNow(),
-            //     ctx.from.id,
-            //     ms
-            // );
         });
 
-        // bot.use(Telegraf.log());
-
-        const stage = new Scenes.Stage([
-            authScene,
-            menuScene,
-            adminMenuScene,
-            newsScene,
-            mailingScene,
-            feedbackScene,
-            appealScene,
-        ]);
-
-        bot.use(session());
-        bot.use(stage.middleware());
-
-        bot.command('start', (ctx) => {
-            ctx.scene.enter('AUTH_SCENE');
-        });
+        bot.command('start', (ctx) => ctx.scene.enter('AUTH_SCENE'));
 
         console.log('%s Telegram bot created', dateTimeNow());
-
         return bot;
     } catch (e) {
         console.log('%s Telegram bot creation error: %s', dateTimeNow(), e);
     }
-}
+};
 
 module.exports = createBot();

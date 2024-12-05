@@ -1,0 +1,17 @@
+{% set pageTitle = 'Новости' %}
+
+{% extends "layouts/default.njk" %}
+
+{% block bodyContent %}
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <h1 class="section__title">Менеджер статичных рассылок</h1>
+                <div class="section__description">Здесь вы можете выбрать сообщения для отправки в статичных рассылках как приветствие при регистрации и т.д.</div>
+                <div class="news" data-react-component="MessageComponent"></div>
+            </div>
+        </section>
+    </main>
+
+{% endblock %}

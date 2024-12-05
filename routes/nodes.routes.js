@@ -8,149 +8,116 @@ const User = require('../models/User');
 
 const router = express.Router();
 
-router
-    .route('/')
-    .get(auth, (req, res) => {
-        try {
-            if (!req.user) {
-                return res.redirect('/login');
-            } else {
-                return res.redirect('/news');
-            }
-        } catch (err) {
-            console.log(err);
-        }
-    });
-
-router
-    .route('/news')
-    .get(auth, (req, res) => {
-        try {
-            if (!req.user) {
-                return res.redirect('/login');
-            }
-    
-            return res.render('nodes/news', { user: req.user });
-        } catch (err) {
-            console.log(err);
-        }
-    });
-
-router
-    .route('/mailing')
-    .get(auth, (req, res) => {
-        if (!req.user) {
-            return res.redirect('/login');
-        }
-        
-        return res.render('nodes/mailing', { user: req.user });
-    });
-
-router
-    .route('/stats')
-    .get(auth, async (req, res) => {
-        if (!req.user) {
-            return res.redirect('/login');
-        }
-
-        const stats = await User.getStats();
-        
-        return res.render('nodes/stats', { user: req.user, stats: stats });
-    });
-
-router
-    .route('/login')
-    .get((req, res) => {   
-        return res.render('nodes/login', {
-            authFailed: req.query.authFailed
+const asyncHandler = (fn) => (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch((err) => {
+        console.error('Error:', err);
+        res.status(500).render('error', { 
+            error: 'Internal server error', 
+            user: req.user 
         });
     });
+};
 
-router
-    .route('/signup')
-    .get((req, res) => {   
-        return res.render('nodes/signup', {
-            signupFailed: req.query.signupFailed
-        });
-    });
+const requireAuth = (req, res, next) => {
+    if (!req.user) {
+        return res.redirect('/login');
+    }
+    next();
+};
 
-router
-    .route('/logout')
-    .get(async (req, res) => {
-        try {
-            return res.clearCookie("secretToken").redirect('/login');
-        } catch (err) {
-            console.log(err);
-        }
-    });
+const protectedRoute = (viewName) => asyncHandler(async (req, res) => {
+    return res.render(`nodes/${viewName}`, { user: req.user });
+});
 
-router
-    .route('/signup')
-    .post(async (req, res) => {
-        try {
-            const { username, password } = pick(req.body, 'username', 'password');
+router.get('/', auth, (req, res) => {
+    return req.user ? res.redirect('/news') : res.redirect('/login');
+});
 
-            if (!(password && username)) {
-                return res.redirect('/signup/?signupFailed=invalidCredentials');
-            }
+router.get('/news', [auth, requireAuth], protectedRoute('news'));
 
-            const user = await User.backofficeCheck(username);
+router.get('/mailing', [auth, requireAuth], protectedRoute('mailing'));
 
-            if (!user) {
-                return res.redirect('/signup/?signupFailed=noUser');
-            }
-            if (user.password !== null) {
-                return res.redirect('/signup/?signupFailed=signedUp');
-            }
-            if (user.status != 'admin') {
-                return res.redirect('/signup/?signupFailed=noAccess');
-            }
+router.get('/message-manager', [auth, requireAuth], protectedRoute('message-manager'));
 
-            encryptedPassword = await bcrypt.hash(password, 10);
+router.get('/stats', [auth, requireAuth], asyncHandler(async (req, res) => {
+    const stats = await User.getStats();
+    return res.render('nodes/stats', { user: req.user, stats });
+}));
 
-            const userSignedUp = await User.backofficeSignUp(
-                user.id,
-                encryptedPassword,
-            );
+router.get('/login', (req, res) => {
+    if (req.user) {
+        return res.redirect('/news');
+    }
+    return res.render('nodes/login', { authFailed: req.query.authFailed });
+});
 
-            return res.redirect('/login');
-        } catch (err) {
-            console.log(err);
-        }
-    });
+router.get('/signup', (req, res) => {
+    if (req.user) {
+        return res.redirect('/news');
+    }
+    return res.render('nodes/signup', { signupFailed: req.query.signupFailed });
+});
 
-router
-    .route('/login')
-    .post(async (req, res) => {
-        try {
-            const { username, password } = pick(req.body, 'username', 'password');
+router.get('/logout', asyncHandler(async (req, res) => {
+    return res.clearCookie("secretToken").redirect('/login');
+}));
 
-            if (!(username && password)) {
-                return res.redirect('/login/?authFailed=invalidCredentials');
-            }
+router.post('/signup', asyncHandler(async (req, res) => {
+    const { username, password } = pick(req.body, ['username', 'password']);
 
-            const user = await User.backofficeCheck(username);
+    if (!username?.trim() || !password?.trim()) {
+        return res.redirect('/signup/?signupFailed=invalidCredentials');
+    }
 
-            if (!user || user.password == null) {
-                return res.redirect('/login/?authFailed=noUser');
-            }
+    const user = await User.backofficeCheck(username);
 
-            if (user && (await bcrypt.compare(password, user.password))) {
-                const token = jwt.sign(
-                    { user_id: user.id, user_name: user.name },
-                    Config.TOKEN_SECRET,
-                    {
-                        expiresIn: "9h",
-                    }
-                );
+    if (!user) {
+        return res.redirect('/signup/?signupFailed=noUser');
+    }
+    if (user.password !== null) {
+        return res.redirect('/signup/?signupFailed=signedUp');
+    }
+    if (user.status !== 'admin') {
+        return res.redirect('/signup/?signupFailed=noAccess');
+    }
 
-                return res.cookie("secretToken", token, { httpOnly: true }).redirect('/news');
-            } else {
-                return res.redirect('/login/?authFailed=wrongPassword');
-            }
-        } catch (err) {
-            console.log(err);
-        }
-    });
+    const encryptedPassword = await bcrypt.hash(password, 10);
+    await User.backofficeSignUp(user.id, encryptedPassword);
+
+    return res.redirect('/login');
+}));
+
+router.post('/login', asyncHandler(async (req, res) => {
+    const { username, password } = pick(req.body, ['username', 'password']);
+
+    if (!username?.trim() || !password?.trim()) {
+        return res.redirect('/login/?authFailed=invalidCredentials');
+    }
+
+    const user = await User.backofficeCheck(username);
+
+    if (!user || user.password == null) {
+        return res.redirect('/login/?authFailed=noUser');
+    }
+
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+        return res.redirect('/login/?authFailed=wrongPassword');
+    }
+
+    const token = jwt.sign(
+        { user_id: user.id, user_name: user.name },
+        Config.TOKEN_SECRET,
+        { expiresIn: "9h" }
+    );
+
+    return res
+        .cookie("secretToken", token, { 
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        })
+        .redirect('/news');
+}));
 
 module.exports = router;
