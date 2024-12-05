@@ -273,7 +273,7 @@ const MailingControlPanel = ({ selectedMailing }) => {
                 )}
 
                 {(filterOptions) && (
-                    <div class="control__row">
+                    <div class="control__row control__row--margin">
                         {(organization.length == 0) && (
                             <button
                                 class="button control__row--item button--blue"

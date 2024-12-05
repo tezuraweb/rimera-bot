@@ -2,38 +2,39 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import NewsItem from './NewsItem';
 
-const NewsList = ({ updateSelectedNews }) => {
+const NewsList = ({ updateSelectedNews, isTemplate }) => {
     const [newsList, setNewsList] = useState([]);
     const [page, setPage] = useState(1);
-    const [newsCount, setNewsCount] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
     const limit = 5;
 
     useEffect(() => {
-        const fetchTotalNews = async () => {
-            try {
-                const response = await axios.get('/api/news-count');
-                const count = parseInt(response.data.count);
-                setNewsCount(count);
-            } catch (error) {
-                console.log('Ошибка при получении числа новостей:', error);
-            }
-        };
-
-        fetchTotalNews();
-    }, []);
+        setNewsList([]);
+        setPage(1);
+        setHasMore(true);
+    }, [isTemplate]);
 
     useEffect(() => {
         const fetchNews = async () => {
             try {
-                const response = await axios.get(`/api/news?page=${page}&limit=${limit}`);
-                setNewsList((prevNewsList) => [...prevNewsList, ...response.data]);
+                const response = await axios.get(`/api/news`, {
+                    params: {
+                        page,
+                        limit,
+                        isTemplate
+                    }
+                });
+                
+                const { data, total } = response.data;
+                setNewsList((prevNewsList) => [...prevNewsList, ...data]);
+                setHasMore(newsList.length + data.length < total);
             } catch (error) {
-                console.log('Ошибка при получении списка новостей:', error);
+                console.error('Error fetching news:', error);
             }
         };
 
         fetchNews();
-    }, [page]);
+    }, [page, isTemplate]);
 
     const loadMoreNews = () => {
         setPage((prevPage) => prevPage + 1);
@@ -44,15 +45,33 @@ const NewsList = ({ updateSelectedNews }) => {
     };
 
     return (
-        <div class="list">
-            <div class="list__wrapper">
-                {newsList.map((news, index) => (
-                    <NewsItem key={index} news={news} onSelect={handleNewsSelect} />
+        <div className="list">
+            <div className="list__wrapper">
+                {newsList.map((news) => (
+                    (isTemplate ? (
+                        <NewsItem
+                            key={news.id}
+                            news={news}
+                            onSelect={handleNewsSelect}
+                            isTemplate={isTemplate}
+                        />
+                    ) : (
+                        <NewsItem
+                            key={news.id}
+                            news={news}
+                            onSelect={handleNewsSelect}
+                        />
+                    ))
                 ))}
             </div>
-            
-            {newsList.length < newsCount && (
-                <button class="list__button button button--green" onClick={loadMoreNews}>Загрузить еще новости</button>
+
+            {hasMore && (
+                <button
+                    className="list__button button button--green"
+                    onClick={loadMoreNews}
+                >
+                    Загрузить еще новости
+                </button>
             )}
         </div>
     );

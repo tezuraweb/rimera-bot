@@ -1,249 +1,386 @@
 const express = require('express');
 const pick = require('lodash/pick');
+const router = express.Router();
+
+// Import models
 const News = require('../models/News');
 const Mailing = require('../models/Mailing');
 const Organization = require('../models/Organization');
 const Department = require('../models/Department');
+const Messages = require('../models/Messages');
 const User = require('../models/User');
 const bot = require('../bot');
 
-const router = express.Router();
+// Middleware for parameter validation
+const validateId = (req, res, next) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ error: 'Invalid ID parameter' });
+    }
+    req.validatedId = id;
+    next();
+};
 
-router
-    .route('/news')
-    .get(async (req, res) => {
-        try {
-            const page = req.query.page;
-            const limit = req.query.limit;
+const validatePagination = (req, res, next) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    
+    if (page < 1 || limit < 1 || limit > 100) {
+        return res.status(400).json({ error: 'Invalid pagination parameters' });
+    }
+    
+    req.pagination = { page, limit };
+    next();
+};
 
-            const news = await News.getPage(page, limit);
+// News routes
+router.get('/news', validatePagination, async (req, res) => {
+    try {
+        const { page, limit } = req.pagination;
+        const isTemplate = req.query.isTemplate === 'true';
+        
+        const result = await News.getPage(page, limit, isTemplate);
+        res.json(result);
+    } catch (err) {
+        console.error('Error fetching news:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
-            res.json(news);
-        } catch (err) {
-            res.status(400).json({ error: err });
+router.get('/news/image/:id', validateId, async (req, res) => {
+    try {
+        const fileLink = await bot.telegram.getFileLink(req.validatedId);
+        res.json({ href: fileLink.href });
+    } catch (err) {
+        console.error('Error fetching image:', err);
+        res.status(404).json({ error: 'Image not found' });
+    }
+});
+
+router.post('/news-update/:id', validateId, async (req, res) => {
+    try {
+        const { text } = pick(req.body, ['text']);
+        
+        if (!text || typeof text !== 'string') {
+            return res.status(400).json({ error: 'Invalid text parameter' });
         }
-    });
 
-router
-    .route('/news-count')
-    .get(async (req, res) => {
-        try {
-            const newsCount = await News.getNewsCount();
+        const news = await News.update(req.validatedId, text);
+        res.json(news);
+    } catch (err) {
+        console.error('Error updating news:', err);
+        res.status(500).json({ error: 'Failed to update news' });
+    }
+});
 
-            res.json(newsCount);
-        } catch (err) {
-            res.status(400).json({ error: err });
+// Mailing routes
+router.get('/mailing-list', async (req, res) => {
+    try {
+        const mailings = await Mailing.getAll();
+        res.json(mailings);
+    } catch (err) {
+        console.error('Error fetching mailing list:', err);
+        res.status(500).json({ error: 'Failed to fetch mailing list' });
+    }
+});
+
+router.post('/mailing-create', async (req, res) => {
+    try {
+        const mailingData = pick(req.body, [
+            'title', 'organization', 'department', 
+            'users', 'position', 'gender', 
+            'date', 'channels'
+        ]);
+
+        // Basic validation
+        if (!mailingData.title) {
+            return res.status(400).json({ error: 'Title is required' });
         }
-    });
 
-router
-    .route('/news/image/:id')
-    .get(async (req, res) => {
-        try {
-            const id = req.params.id;
+        const mailing = await Mailing.create(mailingData);
+        res.json(mailing);
+    } catch (err) {
+        console.error('Error creating mailing:', err);
+        res.status(500).json({ error: 'Failed to create mailing' });
+    }
+});
 
-            const imgHref = await bot.telegram.getFileLink(id).then((res) => res.href);
+router.post('/mailing-update/:id', validateId, async (req, res) => {
+    try {
+        const mailingData = pick(req.body, [
+            'title', 'organization', 'department', 
+            'users', 'position', 'gender', 
+            'date', 'channels'
+        ]);
 
-            res.json(imgHref);
-        } catch (err) {
-            res.status(400).json({ error: err });
+        const mailing = await Mailing.update(req.validatedId, mailingData);
+        res.json(mailing);
+    } catch (err) {
+        console.error('Error updating mailing:', err);
+        res.status(500).json({ error: 'Failed to update mailing' });
+    }
+});
+
+router.get('/mailing/:id', validateId, async (req, res) => {
+    try {
+        const mailing = await Mailing.getById(req.validatedId);
+        if (!mailing) {
+            return res.status(404).json({ error: 'Mailing not found' });
         }
-    });
+        res.json(mailing);
+    } catch (err) {
+        console.error('Error fetching mailing:', err);
+        res.status(500).json({ error: 'Failed to fetch mailing' });
+    }
+});
 
-router
-    .route('/news-update/:id')
-    .post(async (req, res) => {
-        try {
-            const id = parseInt(req.params.id);
-            const data = pick(req.body, 'text');
+// Organization routes
+router.get('/organizations', async (req, res) => {
+    try {
+        const orgs = await Organization.getAll();
+        res.json(orgs);
+    } catch (err) {
+        console.error('Error fetching organizations:', err);
+        res.status(500).json({ error: 'Failed to fetch organizations' });
+    }
+});
 
-            const news = await News.update(id, data.text);
-
-            res.json(news);
-        } catch (err) {
-            res.status(400).json({ error: err });
+router.get('/organizations/active', async (req, res) => {
+    try {
+        const { id } = req.query;
+        if (!id) {
+            return res.status(400).json({ error: 'ID parameter is required' });
         }
-    });
 
-router
-    .route('/mailing-list')
-    .get(async (req, res) => {
-        try {
-            const newsCount = await Mailing.getAll();
-
-            res.json(newsCount);
-        } catch (err) {
-            res.status(400).json({ error: err });
+        const ids = id.split(',').map(Number).filter(id => !isNaN(id) && id > 0);
+        if (ids.length === 0) {
+            return res.status(400).json({ error: 'Invalid ID format' });
         }
-    });
 
-router
-    .route('/mailing-create')
-    .post(async (req, res) => {
-        try {
-            const data = pick(req.body, 'title', 'organization', 'department', 'users', 'position', 'gender', 'date', 'channels');
+        const orgs = await Organization.getByIds(ids);
+        res.json(orgs);
+    } catch (err) {
+        console.error('Error fetching active organizations:', err);
+        res.status(500).json({ error: 'Failed to fetch organizations' });
+    }
+});
 
-            const mailing = await Mailing.create(data);
-
-            res.json(mailing);
-        } catch (err) {
-            res.status(400).json({ error: err });
+router.get('/organization/search', async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q || q.length < 2) {
+            return res.status(400).json({ error: 'Search query too short' });
         }
-    });
 
-router
-    .route('/mailing-update/:id')
-    .post(async (req, res) => {
-        try {
-            const id = parseInt(req.params.id);
-            const data = pick(req.body, 'title', 'organization', 'department', 'users', 'position', 'gender', 'date', 'channels');
+        const orgs = await Organization.searchAll(q);
+        res.json(orgs);
+    } catch (err) {
+        console.error('Error searching organizations:', err);
+        res.status(500).json({ error: 'Search failed' });
+    }
+});
 
-            const mailing = await Mailing.update(id, data);
+// Department routes
+router.get('/departments', async (req, res) => {
+    try {
+        const parent = parseInt(req.query.parent) || 0;
+        
+        const deps = parent === 0 
+            ? await Department.getRoot() 
+            : await Department.getSubdivision(parent);
+            
+        res.json(deps);
+    } catch (err) {
+        console.error('Error fetching departments:', err);
+        res.status(500).json({ error: 'Failed to fetch departments' });
+    }
+});
 
-            res.json(mailing);
-        } catch (err) {
-            res.status(400).json({ error: err });
+router.get('/departments/active', async (req, res) => {
+    try {
+        const { id } = req.query;
+        if (!id) {
+            return res.status(400).json({ error: 'ID parameter is required' });
         }
-    });
 
-router
-    .route('/mailing/:id')
-    .get(async (req, res) => {
-        try {
-            const id = parseInt(req.params.id);
+        const ids = id.split(',')
+            .map(Number)
+            .filter(id => !isNaN(id) && id > 0);
 
-            const mailing = await Mailing.getById(id);
-
-            res.json(mailing);
-        } catch (err) {
-            res.status(400).json({ error: err });
+        if (ids.length === 0) {
+            return res.status(400).json({ error: 'Invalid ID format' });
         }
-    });
 
-router
-    .route('/organizations')
-    .get(async (req, res) => {
-        try {
-            const orgs = await Organization.getAll();
+        const deps = await Department.getByIds(ids);
+        res.json(deps);
+    } catch (err) {
+        console.error('Error fetching active departments:', err);
+        res.status(500).json({ error: 'Failed to fetch departments' });
+    }
+});
 
-            res.json(orgs);
-        } catch (err) {
-            res.status(400).json({ error: err });
+router.get('/department/search', async (req, res) => {
+    try {
+        const { q, parent } = req.query;
+        if (!q || q.length < 2) {
+            return res.status(400).json({ error: 'Search query too short' });
         }
-    });
 
-router
-    .route('/organizations/active')
-    .get(async (req, res) => {
-        try {
-            const idsLine = req.query.id;
-            const ids = idsLine.split(',').map(id => parseInt(id));
+        const parentId = parseInt(parent) || 0;
+        
+        const deps = parentId === 0 
+            ? await Department.searchAll(q)
+            : await Department.searchSubdivision(q, parentId);
+            
+        res.json(deps);
+    } catch (err) {
+        console.error('Error searching departments:', err);
+        res.status(500).json({ error: 'Search failed' });
+    }
+});
 
-            const orgs = await Organization.getByIds(ids);
+// User routes
+router.get('/users', async (req, res) => {
+    try {
+        const filters = pick(req.query, ['department', 'organization', 'position', 'gender']);
+        const users = await User.getAll(filters);
+        res.json(users);
+    } catch (err) {
+        console.error('Error fetching users:', err);
+        res.status(500).json({ error: 'Failed to fetch users' });
+    }
+});
 
-            res.json(orgs);
-        } catch (err) {
-            res.status(400).json({ error: err });
+router.get('/users/active', async (req, res) => {
+    try {
+        const { id } = req.query;
+        if (!id) {
+            return res.status(400).json({ error: 'ID parameter is required' });
         }
-    });
 
-router
-    .route('/departments')
-    .get(async (req, res) => {
-        try {
-            const parent = parseInt(req.query.parent);
+        const ids = id.split(',')
+            .map(Number)
+            .filter(id => !isNaN(id) && id > 0);
 
-            const deps = (parent == 0 || isNaN(parent)) ? await Department.getRoot() : await Department.getSubdivision(parent);
-
-            res.json(deps);
-        } catch (err) {
-            res.status(400).json({ error: err });
+        if (ids.length === 0) {
+            return res.status(400).json({ error: 'Invalid ID format' });
         }
-    });
 
-router
-    .route('/departments/active')
-    .get(async (req, res) => {
-        try {
-            const idsLine = req.query.id;
-            const ids = idsLine.split(',').map(id => parseInt(id));
+        const users = await User.getByIds(ids);
+        res.json(users);
+    } catch (err) {
+        console.error('Error fetching active users:', err);
+        res.status(500).json({ error: 'Failed to fetch users' });
+    }
+});
 
-            const deps = await Department.getByIds(ids);
-
-            res.json(deps);
-        } catch (err) {
-            res.status(400).json({ error: err });
+router.get('/users/search', async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q || q.length < 2) {
+            return res.status(400).json({ error: 'Search query too short' });
         }
-    });
 
-router
-    .route('/users')
-    .get(async (req, res) => {
-        try {
-            const users = await User.getAll();
+        const filters = pick(req.query, ['department', 'organization', 'position', 'gender']);
+        const users = await User.searchAll(q, filters);
+        res.json(users);
+    } catch (err) {
+        console.error('Error searching users:', err);
+        res.status(500).json({ error: 'Search failed' });
+    }
+});
 
-            res.json(users);
-        } catch (err) {
-            res.status(400).json({ error: err });
+router.patch('/users/:id', validateId, async (req, res) => {
+    try {
+        const userData = pick(req.body, [
+            'name', 'email', 'department', 
+            'organization', 'position', 'gender'
+        ]);
+
+        const updatedUser = await User.update(req.validatedId, userData);
+        if (!updatedUser) {
+            return res.status(404).json({ error: 'User not found' });
         }
-    });
 
-router
-    .route('/users/active')
-    .get(async (req, res) => {
-        try {
-            const idsLine = req.query.id;
-            const ids = idsLine.split(',').map(id => parseInt(id));
+        res.json(updatedUser);
+    } catch (err) {
+        console.error('Error updating user:', err);
+        res.status(500).json({ error: 'Failed to update user' });
+    }
+});
 
-            const users = await User.getByIds(ids);
+// Messages routes
+router.get('/messages', async (req, res) => {
+    try {
+        const messages = await Messages.getAll();
+        res.json(messages);
+    } catch (err) {
+        console.error('Error fetching messages:', err);
+        res.status(500).json({ error: 'Failed to fetch messages' });
+    }
+});
 
-            res.json(users);
-        } catch (err) {
-            res.status(400).json({ error: err });
+router.post('/message/create', async (req, res) => {
+    try {
+        const messageData = pick(req.body, [
+            'name', 
+            'title', 
+            'group_id',
+            'news'
+        ]);
+
+        if (!messageData.name || !messageData.title || !messageData.group_id) {
+            return res.status(400).json({ 
+                error: 'Name, title and group_id are required'
+            });
         }
-    });
 
-router
-    .route('/organization/search')
-    .get(async (req, res) => {
-        try {
-            const query = req.query.q;
-
-            const orgs = await Organization.searchAll(query);
-
-            res.json(orgs);
-        } catch (err) {
-            res.status(400).json({ error: err });
+        const message = await Messages.create(messageData);
+        res.json(message);
+    } catch (err) {
+        console.error('Error creating message:', err);
+        
+        if (err.code === '23505') {
+            return res.status(409).json({ 
+                error: 'Message with this name already exists'
+            });
         }
-    });
 
-router
-    .route('/department/search')
-    .get(async (req, res) => {
-        try {
-            const query = req.query.q;
-            const parent = parseInt(req.query.parent);
+        res.status(500).json({ 
+            error: 'Failed to create message'
+        });
+    }
+});
 
-            const deps = (parent == 0 || isNaN(parent)) ? await Department.searchAll(query) : await Department.searchSubdivision(query, parent);
+router.post('/message/update/:id', validateId, async (req, res) => {
+    try {
+        const messageData = pick(req.body, ['news']);
 
-            res.json(deps);
-        } catch (err) {
-            res.status(400).json({ error: err });
+        const existingMessage = await Messages.getById(req.validatedId);
+        if (!existingMessage) {
+            return res.status(404).json({ 
+                error: 'Message not found'
+            });
         }
-    });
 
-router
-    .route('/users/search')
-    .get(async (req, res) => {
-        try {
-            const query = req.query.q;
+        const updatedMessage = await Messages.update(req.validatedId, {
+            news_id: messageData.news || null
+        });
 
-            const orgs = await User.searchAll(query);
-
-            res.json(orgs);
-        } catch (err) {
-            res.status(400).json({ error: err });
-        }
-    });
+        res.json({
+            id: updatedMessage.id,
+            name: updatedMessage.name,
+            title: updatedMessage.title,
+            group_id: updatedMessage.group_id,
+            newsTitle: updatedMessage.news_text,
+            news: updatedMessage.news_id
+        });
+    } catch (err) {
+        console.error('Error updating message:', err);
+        res.status(500).json({ 
+            error: 'Failed to update message'
+        });
+    }
+});
 
 module.exports = router;

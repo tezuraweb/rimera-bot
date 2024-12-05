@@ -39,7 +39,7 @@ class User {
             .whereNotNull('tgchat')
             .whereIn('id', ids);
     }
-    
+
     getUserByDuty(duty) {
         return this.db.select('id', 'tgchat', 'name', 'tgid', 'status')
             .from(this.tableName)
@@ -81,7 +81,7 @@ class User {
                     common_tgchat: 0,
                     common_list: [],
                 })
-                
+
                 return dataDict;
             })
     }
@@ -103,7 +103,7 @@ class User {
                     }
                 }
                 if (filter.gender !== null && filter.gender.length > 0) {
-                    queryBuilder.where({'gender': filter.gender[0]});
+                    queryBuilder.where({ 'gender': filter.gender[0] });
                 }
             });
     }
@@ -129,12 +129,12 @@ class User {
 
     signIn(id, chatId, username) {
         return this.db(this.tableName).update({
-                'tgid': username,
-                'tgchat': chatId,
-                // 'auth_phone': authPhone
-            })
+            'tgid': username,
+            'tgchat': chatId,
+            // 'auth_phone': authPhone
+        })
             .where({ id })
-            .returning('name')
+            .returning('id', 'name', 'status', 'phone')
             .then((data) => data[0]);
     }
 
@@ -158,12 +158,82 @@ class User {
     }
 
     backofficeSignUp(id, password) {
-            return this.db(this.tableName).update({
-                'password': password
-            })
+        return this.db(this.tableName).update({
+            'password': password
+        })
             .where({ id })
             .returning('name')
             .then((data) => data[0]);
+    }
+
+    getShift(data) {
+        try {
+            const { shift, timetable, timetable_type } = data;
+            console.log(shift, timetable, timetable_type);
+            // if (shift == 'first') {
+            const query = `
+                    SELECT
+                        departure_time AS fromPark,
+                        mg_start_time AS start,
+                        start_trmnl AS startTrmnl,
+                        shift_start AS toPark,
+                        name_trmnl_one AS finishTrmnl,
+                        shift_end AS finish,
+                        SEC_TO_TIME(
+                            TIME_TO_SEC(shift_start) -
+                            TIME_TO_SEC(mg_start_time) -
+                            COALESCE(TIME_TO_SEC(first_lunch_time), 0) -
+                            COALESCE(TIME_TO_SEC(second_lunch_time), 0)
+                        ) AS onroute
+                    FROM
+                        schedules
+                    WHERE
+                        mg_start_time IS NOT NULL
+                        AND timetable = ?
+                        AND timetable_type = ?;
+                `;
+
+            // return this.db.raw(query, [timetable, timetable_type]).then((res) => { console.log(res[0]); return res[0] });
+
+            this.db.select(
+                    'departure_time as fromPark',
+                    'mg_start_time as start',
+                    'start_trmnl as startTrmnl',
+                    'shift_start as toPark',
+                    'name_trmnl_one as finishTrmnl',
+                    'shift_end as finish',
+                    this.db.raw(`
+                        SEC_TO_TIME(
+                            TIME_TO_SEC(shift_start) -
+                            TIME_TO_SEC(mg_start_time) -
+                            COALESCE(TIME_TO_SEC(first_lunch_time), 0) -
+                            COALESCE(TIME_TO_SEC(second_lunch_time), 0)
+                        ) AS onroute
+                    `)
+                )
+                .from(this.tableName)
+                .whereNotNull('mg_start_time')
+                .andWhere('timetable', timetable)
+                .andWhere('timetable_type', timetable_type)
+                .then(res => {
+                    console.log(res);
+                    return res[0];
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+
+            // }
+            // else if (shift == 'second') {
+
+            // }
+            // else if (shift == 'double') {
+
+            // }
+        }
+        catch (error) {
+            console.error(error);
+        }
     }
 }
 
