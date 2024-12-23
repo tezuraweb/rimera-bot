@@ -17,6 +17,11 @@
         max-width: 320px;
     }
 
+    &__group {
+        position: relative;
+        margin: 0 20px 40px 0;
+    }
+
     &__link {
         margin-bottom: 20px;
     }

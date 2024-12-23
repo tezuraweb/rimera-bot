@@ -1,0 +1,17 @@
+{% set pageTitle = 'Почта' %}
+
+{% extends "layouts/default.njk" %}
+
+{% block bodyContent %}
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <h1 class="section__title">Адреса электронной почты</h1>
+                <div class="section__description">Здесь вы можете задавать адреса электронной почты для ответственных  сотрудников для получения уведомлений от бота.</div>
+                <div class="news" data-react-component="EmailComponent"></div>
+            </div>
+        </section>
+    </main>
+
+{% endblock %}

@@ -12,5 +12,13 @@ module.exports = {
     DB_USER: process.env.DB_USER,
     DB_PASSWORD: process.env.DB_PASSWORD,
     PORT: process.env.PORT,
-    TOKEN_SECRET: process.env.TOKEN_SECRET
+    TOKEN_SECRET: process.env.TOKEN_SECRET,
+    
+    // SMTP Configuration
+    SMTP_HOST: process.env.SMTP_HOST || 'smtp.example.com',
+    SMTP_PORT: parseInt(process.env.SMTP_PORT) || 587,
+    SMTP_SECURE: process.env.SMTP_SECURE === 'true',
+    SMTP_USER: process.env.SMTP_USER || 'your-email@example.com',
+    SMTP_PASS: process.env.SMTP_PASS || 'your-password',
+    SMTP_FROM: process.env.SMTP_FROM || 'Notification System <notifications@example.com>'
 };

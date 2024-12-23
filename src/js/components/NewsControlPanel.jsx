@@ -1,88 +1,188 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const NewsControlPanel = ({ selectedNews }) => {
-    const [images, setImages] = useState([]);
-    const [hasImages, setHasImages] = useState(false);
+const NewsControlPanel = ({ selectedNews, channels, onNewsUpdate, onNewsPublish }) => {
     const [newsText, setNewsText] = useState('');
     const [newsChanged, setNewsChanged] = useState(false);
     const [newsUpdated, setNewsUpdated] = useState(false);
+    const [newsPublished, setNewsPublished] = useState(false);
+    const [selectedChannels, setSelectedChannels] = useState(new Set());
+    const [newsChannelRelations, setNewsChannelRelations] = useState([]);
+    const [files, setFiles] = useState([]);
 
     useEffect(() => {
-        let promises = [];
-
-        const fetchImages = async () => {
-            try {
-                if (selectedNews.files !== null && selectedNews.files.length > 0) {
-                    selectedNews.files.forEach(file => {
-                        promises.push(getImageHref(file));
-                    });
-
-                    const res = await Promise.all(promises);
-
-                    setImages(res);
-                    setHasImages(true);
-                }
-            } catch (error) {
-                console.log('Ошибка при загрузке изображений:', error);
-            }
-        };
-
         if (selectedNews !== null) {
-            fetchImages();
             setNewsText(selectedNews.text);
+            if (!selectedNews.template) {
+                fetchNewsChannelRelation(selectedNews.id);
+            }
+            fetchFiles(selectedNews.id);
         }
     }, [selectedNews]);
 
     useEffect(() => {
         const updateNews = async () => {
-            axios
-                .post(`api/news-update/${selectedNews.id}`, { 'text': newsText })
-                .then((response) => {
-                    console.log('News updated:', response.data);
-                })
-                .catch((error) => {
-                    console.error('Error updating news:', error);
+            try {
+                await axios.post(`api/news/update/${selectedNews.id}`, {
+                    'text': newsText
                 });
+
+                if (!selectedNews.template) {
+                    const relationsToDelete = newsChannelRelations.filter(
+                        relation => !selectedChannels.has(relation.channel_id)
+                    );
+
+                    const newChannelIds = [...selectedChannels].filter(channelId =>
+                        !newsChannelRelations.some(relation => relation.channel_id === channelId)
+                    );
+
+                    if (relationsToDelete.length > 0) {
+                        await axios.post('api/news-channel/delete-multiple', {
+                            ids: relationsToDelete.map(relation => relation.id)
+                        });
+                    }
+
+                    if (newChannelIds.length > 0) {
+                        await axios.post('api/news-channel/insert-multiple', {
+                            newsId: selectedNews.id,
+                            channelIds: newChannelIds
+                        });
+                    }
+
+                    await fetchNewsChannelRelation(selectedNews.id);
+                }
+
+                setNewsChanged(false);
+                setNewsUpdated(false);
+
+                if (onNewsUpdate) {
+                    onNewsUpdate(selectedNews.id);
+                }
+
+            } catch (error) {
+                console.error('Error updating news:', error);
+            }
         };
 
         if (newsUpdated) {
             updateNews();
-            setNewsChanged(false);
-            setNewsUpdated(false);
         }
     }, [newsUpdated]);
 
-    const getImageHref = (id) => {
-        return new Promise((resolve, reject) => {
-            const response = axios.get(`/api/news/image/${id}`);
-            response.then((res) => {
-                if (res.status == 400) {
-                    console.log(res.error);
-                    reject(null);
+    useEffect(() => {
+        const publish = async () => {
+            try {
+                await axios.post(`api/news/publish/${selectedNews.id}`);
+
+                setNewsChanged(false);
+                newsPublished(false);
+
+                if (onNewsPublish) {
+                    onNewsPublish();
                 }
-                resolve(res.data);
-            });
+
+            } catch (error) {
+                console.error('Error updating news:', error);
+            }
+        };
+
+        if (newsPublished && !newsChanged) {
+            publish();
+        }
+    }, [newsPublished]);
+
+    const fetchNewsChannelRelation = async (newsId) => {
+        try {
+            const response = await axios.get(`api/news-channel/${newsId}`);
+            setNewsChannelRelations(response.data);
+            setSelectedChannels(new Set(response.data.map(relation => relation.channel_id)));
+        } catch (error) {
+            console.error('Error fetching news-channel relations:', error);
+        }
+    };
+
+    const fetchFiles = async (newsId) => {
+        try {
+            const response = await axios.get(`api/files/news/${newsId}`);
+            if (response?.data?.length > 0) {
+                setFiles(response.data);
+            } else {
+                setFiles([]);
+            }
+        } catch (error) {
+            console.error('Error fetching news files:', error);
+        }
+    };
+
+    const toggleChannel = (channelId) => {
+        setSelectedChannels(prev => {
+            const newSelection = new Set(prev);
+            if (newSelection.has(channelId)) {
+                newSelection.delete(channelId);
+            } else {
+                newSelection.add(channelId);
+            }
+            return newSelection;
         });
-    }
+        setNewsChanged(true);
+    };
+
+    const submitForm = (e) => {
+        e.preventDefault();
+        setNewsUpdated(true);
+    };
+
+    const publishNews = (e) => {
+        e.preventDefault();
+        setNewsPublished(true);
+    };
 
     return (
-        <div class="control">
+        <div className="control">
             {selectedNews && (
-                <div>
-                    <h2 class="control__title">Редактор новостей</h2>
-                    <div class="control__wrapper">
-                        <div class="control__link">
+                <form className="control__form" onSubmit={submitForm}>
+                    <h2 className="control__title">Редактор новостей</h2>
+                    <div className="control__wrapper">
+                        <div className="control__link">
                             <span>Автор: </span>
-                            <a class="link" href={'https://t.me/' + selectedNews.username} target='_blank' rel='nofollow noopener'>{'@' + selectedNews.username}</a>
-                            <div class="control__description">Текст новости:
-                                <div class="tooltip tooltip--green">
-                                    <span class="tooltip__text">Вы можете отредактировать текст новости, для этого кликните в поле ниже и начните вводить текст.  Затем кликните по кнопке “Сохранить”. После сохранения выйдите из панели администратора и опубликуйте ваши новости через бота.</span>
+                            <a
+                                className="link"
+                                href={`https://t.me/${selectedNews.username}`}
+                                target='_blank'
+                                rel='nofollow noopener'
+                            >
+                                @{selectedNews.username}
+                            </a>
+
+                            {!selectedNews.template && <div className="filter__active">
+                                {channels.map((channel) => (
+                                    <div
+                                        className={`filter__active--item ${selectedChannels.has(channel.id) ? 'active' : ''}`}
+                                        key={channel.id}
+                                        onClick={() => toggleChannel(channel.id)}
+                                    >
+                                        <div className="filter__active--text">
+                                            <span>{channel.name}</span>
+                                            <span> (@{channel.link})</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>}
+
+                            <div className="control__description">
+                                Текст новости:
+                                <div className="tooltip tooltip--green">
+                                    <span className="tooltip__text">
+                                        Вы можете отредактировать текст новости, для этого кликните в поле ниже и начните вводить текст.
+                                        Затем кликните по кнопке "Сохранить". После сохранения выйдите из панели администратора и
+                                        опубликуйте ваши новости через бота.
+                                    </span>
                                 </div>
                             </div>
                         </div>
+
                         <textarea
-                            class="control__text"
+                            className="control__text"
                             cols="50"
                             rows="8"
                             value={newsText}
@@ -90,21 +190,31 @@ const NewsControlPanel = ({ selectedNews }) => {
                                 setNewsText(event.target.value);
                                 setNewsChanged(true);
                             }}
-                        ></textarea>
-                        {hasImages && (
-                            <div class="control__images flex">
-                                {images.filter(img => img !== null).map((img, index) => (
-                                    <div class="control__images--item flex-item" key={index}>
-                                        <img src={img} alt="img" />
-                                    </div>
+                        />
+
+                        {files?.length > 0 && (
+                            <div className="control__images flex">
+                                {files.map((file, index) => (
+                                    (file.type === 'photo' ? <div className="control__images--item flex-item" key={index}>
+                                        <img src={`/api/tg/image/${file.file_id}`} alt="img" />
+                                    </div> : null)
                                 ))}
                             </div>
                         )}
+
                         {newsChanged && (
-                            <button class="control__button button button--green" onClick={() => setNewsUpdated(true)}>Сохранить</button>
+                            <button className="control__button button button--green" type="submit">
+                                Сохранить
+                            </button>
+                        )}
+
+                        {(!newsChanged && !newsUpdated) && (
+                            <button className="control__button button button--green" type="button" onClick={publishNews}>
+                                Опубликовать
+                            </button>
                         )}
                     </div>
-                </div>
+                </form>
             )}
         </div>
     );

@@ -3,26 +3,37 @@ import axios from 'axios';
 import NewsList from './NewsList';
 
 const GROUPS = [
-    { 
-        id: 1, 
-        title: 'Welcome Messages', 
+    {
+        id: 1,
+        title: 'Приветственная рассылка',
         messageNames: [
-            { name: 'welcome_message', title: 'Welcome Message' },
-            { name: 'first_login', title: 'First Login Message' }
+            { name: 'greeting_welcome', title: 'Первое приветствие' },
+            { name: 'greeting_info', title: 'Информация' },
+            { name: 'greeting_subscribe', title: 'Просьба подписаться на каналы' },
+            { name: 'greeting_remind1', title: 'Напоминание о подписке на каналы 1' },
+            { name: 'greeting_remind2', title: 'Напоминание о подписке на каналы 2' },
+            { name: 'greeting_deny', title: 'Отказ в допуске, напоминание о подписке' },
+            { name: 'greeting_goto_menu', title: 'Допуск разрешен, добро пожаловать' },
         ]
     },
-    { 
-        id: 2, 
-        title: 'Notification Messages', 
+    {
+        id: 2,
+        title: 'Обращения пользователей',
         messageNames: [
-            { name: 'news_notification', title: 'News Notification' },
-            { name: 'event_reminder', title: 'Event Reminder' }
+            { name: 'appeal_feature', title: 'Подать рацпредложение' },
+            { name: 'appeal_problem', title: 'Сообщить о проблеме' },
+            { name: 'appeal_contacts', title: 'Контакты' },
+            { name: 'appeal_security', title: 'Служба безопасности' },
+            { name: 'appeal_ceo', title: 'Приемная исполнительного директора' },
+            { name: 'appeal_hr', title: 'Дирекция по персоналу' },
+            { name: 'appeal_labour', title: 'Охрана труда' },
         ]
     },
 ];
 
 const MessageComponent = () => {
     const [messages, setMessages] = useState([]);
+    const [newsList, setNewsList] = useState([]);
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [isNewsDialogOpen, setIsNewsDialogOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -31,6 +42,10 @@ const MessageComponent = () => {
     useEffect(() => {
         fetchMessages();
     }, []);
+
+    useEffect(() => {
+        fetchNews();
+    }, [selectedMessage]);
 
     const fetchMessages = async () => {
         try {
@@ -45,45 +60,55 @@ const MessageComponent = () => {
         }
     };
 
+    const fetchNews = async () => {
+        if (!selectedMessage) return;
+
+        try {
+            const response = await axios.get(`/api/news/all`, {
+                params: {
+                    isTemplate: true
+                }
+            });
+
+            const data = response.data;
+            setNewsList(data);
+        } catch (error) {
+            console.error('Error fetching news:', error);
+        }
+    };
+
     const handleNewsSelect = async (news) => {
         if (!selectedMessage) return;
 
         try {
-            const messageData = {
-                news: news.id
-            };
-
             let updatedMessage;
-            
+
             if (selectedMessage.id) {
-                // Update existing message
-                const response = await axios.post(`/api/message/update`, {
-                    id: selectedMessage.id,
-                    ...messageData
+                const response = await axios.post(`/api/message/update/${selectedMessage.id}`, {
+                    news: news.id
                 });
                 updatedMessage = response.data;
             } else {
-                // Create new message
                 const response = await axios.post(`/api/message/create`, {
                     name: selectedMessage.name,
                     title: selectedMessage.title,
                     group_id: selectedMessage.group_id,
-                    ...messageData
+                    news: news.id
                 });
                 updatedMessage = response.data;
             }
-            
+
             setMessages(prevMessages => {
                 const messageExists = prevMessages.some(msg => msg.name === updatedMessage.name);
                 if (messageExists) {
-                    return prevMessages.map(msg => 
+                    return prevMessages.map(msg =>
                         msg.name === updatedMessage.name ? updatedMessage : msg
                     );
                 } else {
                     return [...prevMessages, updatedMessage];
                 }
             });
-            
+
             setIsNewsDialogOpen(false);
             setSelectedMessage(null);
         } catch (err) {
@@ -139,14 +164,15 @@ const MessageComponent = () => {
                 <div className="modal">
                     <div className="modal__overlay" onClick={() => setIsNewsDialogOpen(false)} />
                     <div className="modal__content">
-                        <button 
-                            className="modal__close" 
+                        <button
+                            className="modal__close"
                             onClick={() => setIsNewsDialogOpen(false)}
                         >
                             ×
                         </button>
-                        <NewsList 
-                            updateSelectedNews={handleNewsSelect}
+                        <NewsList
+                            newsList={newsList}
+                            onNewsSelect={handleNewsSelect}
                             isTemplate={true}
                         />
                     </div>

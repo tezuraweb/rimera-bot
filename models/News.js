@@ -6,42 +6,58 @@ class News {
         this.tableName = "news";
     }
 
-    async getPage(page, limit, isTemplate = false) {
+    async getPage(page, limit, isTemplate = false, isPublished = false) {
         limit = parseInt(limit) || 5;
         const offset = (page - 1) * limit;
-
+    
         const result = await this.db
             .select([
-                '*',
-                this.db.raw('count(*) OVER() as total_count'),
-                this.db.raw(`(
-                    SELECT tgid 
-                    FROM users 
-                    WHERE users.id = ${this.tableName}.creator 
-                    LIMIT 1
-                ) AS username`)
+                'news.*',
+                'users.tgid as username',
+                this.db.raw('count(*) OVER() as total')
             ])
             .from(this.tableName)
-            .where({ template: isTemplate })
-            .orderBy('id', 'desc')
+            .leftJoin('users', 'users.id', 'news.creator')
+            .where('news.template', isTemplate)
+            .where('news.isPublished', isPublished)
+            .orderBy('news.id', 'DESC')
             .limit(limit)
             .offset(offset);
-
-        const total = result[0]?.total_count || 0;
-        
+    
         return {
-            data: result.map(row => {
-                const { total_count, ...newsData } = row;
-                return newsData;
-            }),
-            total
+            data: result,
+            total: result.length > 0 ? parseInt(result[0].total) : 0
         };
     }
 
-    async getInbox() {
-        return this.db.select('id', 'text', 'files', 'creator')
+    async getAll(isTemplate = false) {
+        const result = await this.db.select('id', 'text')
             .from(this.tableName)
-            .where({ template: false });
+            .where('template', isTemplate)
+            .orderBy('id', 'DESC')
+    
+        return result;
+    }
+
+    async getInbox() {
+        return this.db
+            .select([
+                'news.id',
+                'news.text',
+                'users.tgid as username',
+                this.db.raw('count(*) OVER() as total')
+            ])
+            .from(this.tableName)
+            .leftJoin('users', 'users.id', 'news.creator')
+            .where({ template: false })
+            .where({ isPublished: false });username
+    }
+
+    async getById(id) {
+        return this.db
+            .from(this.tableName)
+            .where({ id })
+            .first();
     }
 
     async addPost(userId, data) {
@@ -51,7 +67,6 @@ class News {
 
         const newsData = {
             text: data.newsText.trim(),
-            files: data.photo || null,
             creator: userId,
             template: !!data.template,
         };
@@ -73,6 +88,26 @@ class News {
                 .where({ id })
                 .update({
                     text: text.trim(),
+                })
+                .returning('*');
+
+            return result[0];
+        } catch (err) {
+            console.error('Error updating news:', err);
+            throw err;
+        }
+    }
+
+    async updatePublish(id) {
+        if (!id) {
+            throw new Error('Invalid input parameters');
+        }
+
+        try {
+            const result = await this.db(this.tableName)
+                .where({ id })
+                .update({
+                    isPublished: true,
                 })
                 .returning('*');
 

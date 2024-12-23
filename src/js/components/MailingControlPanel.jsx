@@ -18,13 +18,9 @@ const MailingControlPanel = ({ selectedMailing }) => {
     const [selectedGender, setSelectedGender] = useState('m');
     const [checkboxBoss, setCheckboxBoss] = useState(false);
     const [checkboxEmployee, setCheckboxEmployee] = useState(false);
-    // const [publishToChannels, setPublishToChannels] = useState(false);
     const [mailingChanged, setMailingChanged] = useState(false);
     const [mailingUpdated, setMailingUpdated] = useState(false);
     const [mode, setMode] = useState('filters');    
-
-    const channels = ['@test_rimera'];
-
 
     useEffect(() => {
         const fetchMailing = async () => {
@@ -54,12 +50,11 @@ const MailingControlPanel = ({ selectedMailing }) => {
                 position: position ? positions : null,
                 gender: gender ? selectedGender : null,
                 date: date ? date.toISOString() : null,
-                // channels: publishToChannels ? channels : null,
             };
 
             if (selectedMailing && selectedMailing !== null) {
                 axios
-                    .post(`api/mailing-update/${selectedMailing.id}`, formData)
+                    .post(`api/mailing/update/${selectedMailing.id}`, formData)
                     .then((response) => {
                         console.log('Mailing updated:', response.data);
                     })
@@ -68,7 +63,7 @@ const MailingControlPanel = ({ selectedMailing }) => {
                     });
             } else {
                 axios
-                    .post('api/mailing-create', formData)
+                    .post('api/mailing/create', formData)
                     .then((response) => {
                         console.log('Mailing created:', response.data);
                     })
@@ -128,11 +123,6 @@ const MailingControlPanel = ({ selectedMailing }) => {
         setCheckboxEmployee(event.target.checked);
         setMailingChanged(true);
     };
-
-    // const handleCheckboxChannels = (event) => {
-    //     setPublishToChannels(event.target.checked);
-    //     setMailingChanged(true);
-    // };
 
     const handleFilterUpdate = (type, data) => {
         setNewFilter('');
@@ -245,8 +235,8 @@ const MailingControlPanel = ({ selectedMailing }) => {
                                 class="control__radio--item"
                                 type="radio"
                                 name="genderFilter"
-                                value="m"
-                                checked={selectedGender === 'm'}
+                                value="M"
+                                checked={selectedGender === 'M'}
                                 onChange={handleGenderChange}
                             />
                             М
@@ -256,8 +246,8 @@ const MailingControlPanel = ({ selectedMailing }) => {
                                 class="control__radio--item"
                                 type="radio"
                                 name="genderFilter"
-                                value="f"
-                                checked={selectedGender === 'f'}
+                                value="F"
+                                checked={selectedGender === 'F'}
                                 onChange={handleGenderChange}
                             />
                             Ж
@@ -316,18 +306,6 @@ const MailingControlPanel = ({ selectedMailing }) => {
                         )}
                     </div>
                 )}
-
-                {/* <div class="control__checkbox">
-                    <label class="control__checkbox--label">
-                        <input
-                            class="control__checkbox--item"
-                            type="checkbox"
-                            checked={publishToChannels}
-                            onChange={handleCheckboxChannels}
-                        />
-                        Опубликовать в каналы
-                    </label>
-                </div> */}
 
                 <div class="control__row">
                     {(addFilter && users.length == 0 && !(organization.length > 0 && department.length > 0 && position && gender)) && (
