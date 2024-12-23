@@ -23,6 +23,7 @@ const defaultValues = {
     'company_code': 'Наш кодекс',
     'company_info': 'Информация о компании',
     'news_digest': 'Дайджест новостей',
+    'news_course': 'Курс Римеры',
     'news_intro': 'Создайте новость для публикации в каналах',
     'faq_intro': 'Часто задаваемые вопросы',
     'vacancies_intro': 'Наши вакансии',
@@ -32,20 +33,22 @@ const sendMessage = async (ctx, options = {}) => {
     let messageData = {
         text: '',
         files: [],
-        keyboard: null
+        keyboard: options.keyboard || null
     };
 
     try {
         if (options.messageName) {
             const message = await Messages.getByName(options.messageName);
             let files = [];
-            try {
-                files = await NewsFiles.getFilesByNews(message.news_id);
-            } catch (error) {
-                console.error('Error fetching files:', error);
-                files = [];
-            }
+            
             if (message) {
+                try {
+                    files = await NewsFiles.getFilesByNews(message.news_id);
+                } catch (error) {
+                    console.error('Error fetching files:', error);
+                    files = [];
+                }
+
                 messageData = {
                     text: message.news_text,
                     files: files || [],

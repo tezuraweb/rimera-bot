@@ -13,6 +13,7 @@ const AppealScene = require('./scenes/appeal.scene');
 const FeedbackScene = require('./scenes/feedback.scene');
 const GreetingScene = require('./scenes/greeting.scene');
 const FAQScene = require('./scenes/faq.scene');
+const InfoScene = require('./scenes/info.scene');
 
 const createBot = () => {
     try {
@@ -29,6 +30,7 @@ const createBot = () => {
             new FeedbackScene(),
             new GreetingScene(),
             new FAQScene(),
+            new InfoScene(),
         ];
 
         const stage = new Scenes.Stage(scenes);

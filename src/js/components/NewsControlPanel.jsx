@@ -23,9 +23,11 @@ const NewsControlPanel = ({ selectedNews, channels, onNewsUpdate, onNewsPublish 
     useEffect(() => {
         const updateNews = async () => {
             try {
-                await axios.post(`api/news/update/${selectedNews.id}`, {
+                const response = await axios.post(`api/news/update/${selectedNews.id}`, {
                     'text': newsText
                 });
+
+                const updatedNews = response.data;
 
                 if (!selectedNews.template) {
                     const relationsToDelete = newsChannelRelations.filter(
@@ -56,7 +58,7 @@ const NewsControlPanel = ({ selectedNews, channels, onNewsUpdate, onNewsPublish 
                 setNewsUpdated(false);
 
                 if (onNewsUpdate) {
-                    onNewsUpdate(selectedNews.id);
+                    onNewsUpdate(updatedNews);
                 }
 
             } catch (error) {
@@ -72,17 +74,18 @@ const NewsControlPanel = ({ selectedNews, channels, onNewsUpdate, onNewsPublish 
     useEffect(() => {
         const publish = async () => {
             try {
-                await axios.post(`api/news/publish/${selectedNews.id}`);
+                const response = await axios.post(`api/news/publish/${selectedNews.id}`);
+                console.log('News published successfully', response.data);
 
                 setNewsChanged(false);
-                newsPublished(false);
+                setNewsPublished(false);
 
                 if (onNewsPublish) {
                     onNewsPublish();
                 }
 
             } catch (error) {
-                console.error('Error updating news:', error);
+                console.error('Error publishing news:', error);
             }
         };
 

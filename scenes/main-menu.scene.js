@@ -1,10 +1,11 @@
 const { Scenes, Markup } = require('telegraf');
+const { sendMessage } = require('../utils/bot-message');
 
 class MainMenuScene {
     constructor() {
         this.keyboard = Markup.inlineKeyboard([
-            [Markup.button.callback('🏢 Знакомство с Группой компаний «Римера»', '_')],
-            [Markup.button.callback('📰 Дайджест новостей', '_')],
+            [Markup.button.callback('🏢 Знакомство с Группой компаний «Римера»', 'goto_info')],
+            [Markup.button.callback('📰 Дайджест новостей', 'goto_digest')],
             [Markup.button.callback('💡 Подать рацпредложение', 'appeal_feature')],
             [Markup.button.callback('⚠️ Сообщить о проблеме', 'appeal_problem')],
             [Markup.button.callback('✍️ Предложить новость', 'news')],
@@ -19,7 +20,11 @@ class MainMenuScene {
         scene.enter(this.showMainMenu.bind(this));
         scene.action('news', ctx => ctx.scene.enter('ADD_NEWS_SCENE'));
         scene.action('faq', ctx => ctx.scene.enter('FAQ_SCENE'));
-        scene.action('vacancies', ctx => ctx.scene.enter('VACANCY_SCENE'));
+        scene.action('goto_info', ctx => ctx.scene.enter('INFO_SCENE'));
+        scene.action('goto_digest', this.showDigest.bind(this));
+        scene.action('digest_course', this.showDigestCourse.bind(this));
+        scene.action('vacancies', this.showVacancies.bind(this));
+        scene.action('back', ctx => ctx.scene.reenter());
         scene.action('help', this.showHelp.bind(this));
         scene.action('appeal_feature', ctx => {
             ctx.session.direction = 'appeal_feature';
@@ -42,6 +47,48 @@ class MainMenuScene {
             `Главное меню\nВыберите нужный раздел:`,
             this.keyboard
         );
+    }
+
+    async showDigest(ctx) {
+        const keyboard = Markup.inlineKeyboard([
+            [Markup.button.callback('Курс Римеры', 'digest_course')],
+            [Markup.button.url(
+                'Новостной дайджест «Click&Read»',
+                'https://myhyperspace.hprspc.com/'
+            )],
+            [Markup.button.callback('Назад', 'back')],
+        ]);
+
+        await sendMessage(ctx, { 
+            messageName: 'news_digest',
+            keyboard 
+        });
+    }
+
+    async showDigestCourse(ctx) {
+        const keyboard = Markup.inlineKeyboard([
+            [Markup.button.callback('Назад', 'back')],
+        ]);
+
+        await sendMessage(ctx, { 
+            messageName: 'news_course',
+            keyboard 
+        });
+    }
+
+    async showVacancies(ctx) {
+        const keyboard = Markup.inlineKeyboard([
+            [Markup.button.url(
+                'Наши вакансии',
+                'https://rimera.ru/career/open-positions/'
+            )],
+            [Markup.button.callback('Назад', 'back')],
+        ]);
+
+        await sendMessage(ctx, { 
+            messageName: 'vacancies_intro',
+            keyboard 
+        });
     }
 
     async showHelp(ctx) {

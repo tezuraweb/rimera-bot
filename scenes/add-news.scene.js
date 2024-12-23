@@ -3,6 +3,7 @@ const News = require('../models/News');
 const Channel = require('../models/Channel');
 const NewsChannel = require('../models/NewsChannel');
 const NewsFiles = require('../models/NewsFiles');
+const { sendMessage } = require('../utils/bot-message');
 
 const MAX_TEXT_LENGTH = 1024; 
 const HELP_TEXT = `
@@ -22,7 +23,7 @@ class NewsScene {
         
         scene.enter(this.initSession.bind(this));
         scene.on('text', this.handleText.bind(this));
-        scene.on(['photo', 'video'], this.handleMedia.bind(this));
+        scene.on(['photo', 'video', 'document', 'audio', 'voice'], this.handleMedia.bind(this));
         scene.action('send', this.handleSend.bind(this));
         scene.action('help', this.showHelp.bind(this));
         scene.action('back', this.handleBack.bind(this));
@@ -84,7 +85,12 @@ class NewsScene {
             isTemplate: false
         };
 
-        await ctx.reply('Отправьте текст новости и медиафайлы:', this.buildKeyboard(ctx));
+        const keyboard = this.buildKeyboard(ctx);
+
+        await sendMessage(ctx, { 
+            messageName: 'news_intro',
+            keyboard
+        });
     }
 
     async handleText(ctx) {
@@ -124,6 +130,8 @@ class NewsScene {
             await ctx.reply('Неподдерживаемый тип медиафайла.');
             return;
         }
+
+
             
         ctx.session.newsData.files.push({
             fileId,

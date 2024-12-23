@@ -28,7 +28,6 @@ class GreetingScene {
         } catch (error) {
             console.error('Error initializing greeting scene:', error);
             await ctx.reply('Произошла ошибка. Попробуйте позже.');
-            // return ctx.scene.enter('MAIN_MENU_SCENE');
         }
     }
 

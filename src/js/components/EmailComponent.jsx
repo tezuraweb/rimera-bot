@@ -72,7 +72,7 @@ const EmailComponent = () => {
                     organization,
                     user: selectedUser
                 });
-                setEmailList(emailList.map(email => 
+                setEmailList(emailList.map(email =>
                     email.id === selectedItem.id ? response.data : email
                 ));
             } else {
@@ -108,8 +108,8 @@ const EmailComponent = () => {
         const value = e.target.value;
         setUserSearchInput(value);
         setShowUserList(true);
-        
-        const filtered = users.filter(user => 
+
+        const filtered = users.filter(user =>
             user.name.toLowerCase().includes(value.toLowerCase())
         );
         setFilteredUsers(filtered);
@@ -216,13 +216,20 @@ const EmailComponent = () => {
                 <div className="control__group">
                     <label className="control__label">
                         <span className="control__label--text">Тип:</span>
-                        <input
+                        <select
                             className="control__input input"
-                            type="text"
                             value={type}
                             onChange={(e) => setType(e.target.value)}
                             required
-                        />
+                        >
+                            <option value="">Выберите тип обращения</option>
+                            <option value="appeal_feature">Предложение по улучшению</option>
+                            <option value="appeal_problem">Сообщение о проблеме</option>
+                            <option value="appeal_security">Вопрос по безопасности</option>
+                            <option value="appeal_ceo">Обращение к руководству</option>
+                            <option value="appeal_hr">Вопрос по трудоустройству</option>
+                            <option value="appeal_labour">Вопрос по охране труда</option>
+                        </select>
                     </label>
 
                     <div className="tooltip tooltip--blue tooltip--bottom">
