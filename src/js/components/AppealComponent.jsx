@@ -59,8 +59,7 @@ const AppealComponent = () => {
     };
 
     const handleAppealUpdate = () => {
-        setAppealList([]);
-        setPage(1);
+        setAppealList((prev) => prev.filter(appeal => appeal.id !== selectedAppeal.id));
         setSelectedAppeal(null);
     };
 

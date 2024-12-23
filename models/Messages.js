@@ -19,9 +19,7 @@ class Message {
 
             const result = await this.db(this.tableName)
                 .insert(messageData)
-                .returning(['id', 'name', 'title', 'group_id', 'news_id'])
-                .join('news', 'messages.news_id', 'news.id')
-                .select('news.text as news_text');
+                .returning(['id', 'name', 'title', 'group_id', 'news_id']);
 
             return result[0];
         } catch (err) {
@@ -41,9 +39,7 @@ class Message {
                 .update({
                     news_id: data.news_id,
                 })
-                .returning('*')
-                .join('news', 'messages.news_id', 'news.id')
-                .select('news.text as news_text');
+                .returning('*');
 
             return result[0];
         } catch (err) {

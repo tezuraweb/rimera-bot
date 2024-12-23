@@ -134,6 +134,8 @@ router.post('/news/publish/:id', validateId, async (req, res) => {
                     chatId: `@${channel.link}`
                 });
 
+                console.log(`News published to channel: ${channel.link}`);
+
                 stats.success++;
             } catch (error) {
                 console.log(error);
@@ -149,12 +151,15 @@ router.post('/news/publish/:id', validateId, async (req, res) => {
         if (stats.success > 0) {
             try {
                 await News.updatePublish(news.id);
+                return res.json({
+                    success: true,
+                    stats: stats
+                });
             } catch (err) {
                 console.error('Error updating publish status:', err);
                 res.status(500).json({ error: 'Failed to update publish status' });
             }
         }
-
     } catch (err) {
         console.error('Error publishing news:', err);
         res.status(500).json({

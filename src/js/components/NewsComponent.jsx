@@ -59,6 +59,11 @@ const NewsComponent = () => {
         setSelectedNews(null);
     };
 
+    const handleNewsPublish = () => {
+        setNewsList((prev) => prev.filter(news => news.id !== selectedNews.id));
+        setSelectedNews(null);
+    };
+
     const loadMoreNews = () => {
         setPage(prev => prev + 1);
     };
@@ -103,12 +108,7 @@ const NewsComponent = () => {
                             )
                         );
                     }}
-                    onNewsPublish={() => {
-                        setNewsList([]);
-                        setPage(1);
-                        setHasMore(true);
-                        setSelectedNews(null);
-                    }}
+                    onNewsPublish={handleNewsPublish}
                 />
             )}
             <ChannelManager

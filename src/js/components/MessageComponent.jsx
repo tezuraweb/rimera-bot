@@ -29,6 +29,40 @@ const GROUPS = [
             { name: 'appeal_labour', title: 'Охрана труда' },
         ]
     },
+    {
+        id: 2,
+        title: 'Знакомство с компанией',
+        messageNames: [
+            { name: 'company_intro', title: 'Входное сообщение' },
+            { name: 'company_mission', title: 'Миссия' },
+            { name: 'company_values', title: 'Ценности' },
+            { name: 'company_code', title: 'Кодекс' },
+            { name: 'company_info', title: 'Информация' },
+        ]
+    },
+    {
+        id: 2,
+        title: 'Разделы новостей',
+        messageNames: [
+            { name: 'news_digest', title: 'Вход в дайджест' },
+            { name: 'news_course', title: 'Курс Римеры' },
+            { name: 'news_intro', title: 'Вход в предложку' },
+        ]
+    },
+    {
+        id: 2,
+        title: 'Часто задаваемые вопросы',
+        messageNames: [
+            { name: 'faq_intro', title: 'Входное сообщение' },
+        ]
+    },
+    {
+        id: 2,
+        title: 'Вакансии',
+        messageNames: [
+            { name: 'vacancies_intro', title: 'Входное сообщение' },
+        ]
+    },
 ];
 
 const MessageComponent = () => {
@@ -88,6 +122,7 @@ const MessageComponent = () => {
                     news: news.id
                 });
                 updatedMessage = response.data;
+                updatedMessage.news_text = news.text;
             } else {
                 const response = await axios.post(`/api/message/create`, {
                     name: selectedMessage.name,
@@ -96,6 +131,7 @@ const MessageComponent = () => {
                     news: news.id
                 });
                 updatedMessage = response.data;
+                updatedMessage.news_text = news.text;
             }
 
             setMessages(prevMessages => {
