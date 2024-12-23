@@ -8,8 +8,11 @@ const MainMenuScene = require('./scenes/main-menu.scene');
 const AdminMenuScene = require('./scenes/admin-menu.scene');
 const NewsScene = require('./scenes/add-news.scene');
 const MailingScene = require('./scenes/mailing.scene');
-// const FeedbackScene = require('./scenes/feedback.scene');
-// const AppealScene = require('./scenes/appeal.scene');
+const PublishScene = require('./scenes/publish-news.scene');
+const AppealScene = require('./scenes/appeal.scene');
+const FeedbackScene = require('./scenes/feedback.scene');
+const GreetingScene = require('./scenes/greeting.scene');
+const FAQScene = require('./scenes/faq.scene');
 
 const createBot = () => {
     try {
@@ -21,8 +24,11 @@ const createBot = () => {
             new AdminMenuScene(),
             new NewsScene(),
             new MailingScene(),
-            // new FeedbackScene,
-            // new AppealScene,
+            new PublishScene(),
+            new AppealScene(),
+            new FeedbackScene(),
+            new GreetingScene(),
+            new FAQScene(),
         ];
 
         const stage = new Scenes.Stage(scenes);

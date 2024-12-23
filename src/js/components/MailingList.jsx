@@ -8,7 +8,7 @@ const MailingList = ({ updateSelectedMailing }) => {
     useEffect(() => {
         const fetchMailing = async () => {
             try {
-                const response = await axios.get('/api/mailing-list');
+                const response = await axios.get('/api/mailing/list');
                 setMailingList((prevMailingList) => [...prevMailingList, ...response.data]);
             } catch (error) {
                 console.log('Ошибка при получении списка рассылок:', error);

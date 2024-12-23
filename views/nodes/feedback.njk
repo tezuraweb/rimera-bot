@@ -1,0 +1,17 @@
+{% set pageTitle = 'Вопрос - ответ' %}
+
+{% extends "layouts/default.njk" %}
+
+{% block bodyContent %}
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <h1 class="section__title">Обращения</h1>
+                <div class="section__description">Просмотрите и ответьте на обращения пользователей</div>
+                <div class="news" data-react-component="AppealComponent"></div>
+            </div>
+        </section>
+    </main>
+
+{% endblock %}

@@ -1,5 +1,8 @@
 const { Scenes, Markup } = require('telegraf');
 const News = require('../models/News');
+const Channel = require('../models/Channel');
+const NewsChannel = require('../models/NewsChannel');
+const NewsFiles = require('../models/NewsFiles');
 
 const MAX_TEXT_LENGTH = 1024; 
 const HELP_TEXT = `
@@ -24,6 +27,9 @@ class NewsScene {
         scene.action('help', this.showHelp.bind(this));
         scene.action('back', this.handleBack.bind(this));
         scene.action('toggle_template', this.toggleTemplate.bind(this));
+        scene.action('skip_channels', this.handleSkipChannels.bind(this));
+        scene.action('complete_channels', this.handleCompleteChannels.bind(this));
+        scene.action(/select_channel_\d+/, this.handleChannelSelection.bind(this));
         scene.on('edited_message', this.handleEdit.bind(this));
         scene.on('message_delete', this.handleDelete.bind(this));
 
@@ -48,6 +54,21 @@ class NewsScene {
                 [Markup.button.callback('⬅️ Назад', 'back')]
             ]);
         }
+    }
+
+    buildChannelsKeyboard(channels, selectedIds = []) {
+        const channelButtons = channels.map(channel => {
+            const checkmark = selectedIds.includes(channel.id) ? '✅ ' : '';
+            return [Markup.button.callback(`${checkmark} ${channel.name} (@${channel.link})`, `select_channel_${channel.id}`)];
+        });
+
+        return Markup.inlineKeyboard([
+            ...channelButtons,
+            [
+                Markup.button.callback('Пропустить', 'skip_channels'),
+                Markup.button.callback('Завершить', 'complete_channels')
+            ]
+        ]);
     }
 
     async toggleTemplate(ctx) {
@@ -80,13 +101,33 @@ class NewsScene {
         await ctx.reply('Текст сохранен. Добавьте медиафайлы или отправьте новость.');
     }
 
-    async handleMedia(ctx) {
-        const fileId = ctx.message.photo ? 
-            ctx.message.photo[ctx.message.photo.length - 1].file_id : 
-            ctx.message.video.file_id;
+    async handleMedia(ctx) {        
+        let fileId;
+        let fileType;
+        
+        if (ctx.message.photo) {
+            fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
+            fileType = 'photo';
+        } else if (ctx.message.video) {
+            fileId = ctx.message.video.file_id;
+            fileType = 'video';
+        } else if (ctx.message.document) {
+            fileId = ctx.message.document.file_id;
+            fileType = 'document';
+        } else if (ctx.message.audio) {
+            fileId = ctx.message.audio.file_id;
+            fileType = 'audio';
+        } else if (ctx.message.voice) {
+            fileId = ctx.message.voice.file_id;
+            fileType = 'voice';
+        } else {
+            await ctx.reply('Неподдерживаемый тип медиафайла.');
+            return;
+        }
             
         ctx.session.newsData.files.push({
-            id: fileId,
+            fileId,
+            fileType,
             messageId: ctx.message.message_id
         });
         await ctx.reply('Медиафайл добавлен.');
@@ -123,17 +164,81 @@ class NewsScene {
         }
 
         try {
-            await News.addPost(ctx.session.user.id, {
+            const { id: newsId } = await News.addPost(ctx.session.user.id, {
                 newsText: ctx.session.newsData.text,
-                photo: ctx.session.newsData.files.map(f => f.id),
                 template: ctx.session.newsData.isTemplate
             });
+            
+            if (ctx.session.newsData.files.length > 0) {
+                const filesData = ctx.session.newsData.files.map(file => ({
+                    news_id: newsId,
+                    file_id: file.fileId,
+                    type: file.fileType
+                }));
+                
+                await NewsFiles.insertMultiple(filesData);
+            }
 
             await ctx.reply('Новость успешно добавлена!');
+
+            if (!ctx.session.newsData.isTemplate) {
+                // Initialize channel selection
+                ctx.session.channelSelection = {
+                    newsId,
+                    selectedChannels: []
+                };
+
+                const channels = await Channel.getAll();
+                return ctx.reply(
+                    'Выберите каналы для публикации:',
+                    this.buildChannelsKeyboard(channels)
+                );
+            }
+
             return ctx.scene.enter(ctx.session.user.status === 'admin' ? 'ADMIN_MENU_SCENE' : 'MAIN_MENU_SCENE');
         } catch (error) {
             console.error('Add news error:', error);
             await ctx.reply('Ошибка при добавлении новости. Попробуйте еще раз.');
+        }
+    }
+
+    async handleChannelSelection(ctx) {
+        const channelId = parseInt(ctx.match[0].replace('select_channel_', ''));
+        const { selectedChannels } = ctx.session.channelSelection;
+
+        // Toggle channel selection
+        const index = selectedChannels.indexOf(channelId);
+        if (index === -1) {
+            selectedChannels.push(channelId);
+        } else {
+            selectedChannels.splice(index, 1);
+        }
+
+        // Update keyboard with new selection state
+        const channels = await Channel.getAll();
+        await ctx.editMessageReplyMarkup(
+            this.buildChannelsKeyboard(channels, selectedChannels).reply_markup
+        );
+    }
+
+    async handleSkipChannels(ctx) {
+        await ctx.reply('Публикация в каналы пропущена');
+        return ctx.scene.enter(ctx.session.user.status === 'admin' ? 'ADMIN_MENU_SCENE' : 'MAIN_MENU_SCENE');
+    }
+
+    async handleCompleteChannels(ctx) {
+        const { newsId, selectedChannels } = ctx.session.channelSelection;
+
+        try {
+            if (selectedChannels.length > 0) {
+                await NewsChannel.insertMultiple(newsId, selectedChannels);
+                await ctx.reply('Каналы для публикации выбраны');
+            }
+            
+            return ctx.scene.enter(ctx.session.user.status === 'admin' ? 'ADMIN_MENU_SCENE' : 'MAIN_MENU_SCENE');
+        } catch (error) {
+            console.error('Error saving channel selection:', error);
+            await ctx.reply('Ошибка при сохранении выбранных каналов. Попробуйте еще раз.');
         }
     }
 

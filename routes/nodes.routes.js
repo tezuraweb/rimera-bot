@@ -3,46 +3,30 @@ const pick = require('lodash/pick');
 const bcrypt = require('bcryptjs');
 const jwt = require("jsonwebtoken");
 const Config = require('../config');
-const auth = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
 const User = require('../models/User');
 
 const router = express.Router();
 
 const asyncHandler = (fn) => (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch((err) => {
-        console.error('Error:', err);
-        res.status(500).render('error', { 
-            error: 'Internal server error', 
-            user: req.user 
+    Promise.resolve(fn(req, res, next))
+        .catch((err) => {
+            console.error('Error:', err);
+            res.status(500).render('error', { 
+                error: 'Internal server error', 
+                user: req.user 
+            });
         });
-    });
-};
-
-const requireAuth = (req, res, next) => {
-    if (!req.user) {
-        return res.redirect('/login');
-    }
-    next();
 };
 
 const protectedRoute = (viewName) => asyncHandler(async (req, res) => {
-    return res.render(`nodes/${viewName}`, { user: req.user });
+    res.render(`nodes/${viewName}`, { user: req.user });
 });
 
-router.get('/', auth, (req, res) => {
+// Public routes
+router.get('/', (req, res) => {
     return req.user ? res.redirect('/news') : res.redirect('/login');
 });
-
-router.get('/news', [auth, requireAuth], protectedRoute('news'));
-
-router.get('/mailing', [auth, requireAuth], protectedRoute('mailing'));
-
-router.get('/message-manager', [auth, requireAuth], protectedRoute('message-manager'));
-
-router.get('/stats', [auth, requireAuth], asyncHandler(async (req, res) => {
-    const stats = await User.getStats();
-    return res.render('nodes/stats', { user: req.user, stats });
-}));
 
 router.get('/login', (req, res) => {
     if (req.user) {
@@ -58,8 +42,22 @@ router.get('/signup', (req, res) => {
     return res.render('nodes/signup', { signupFailed: req.query.signupFailed });
 });
 
+// Protected routes
+router.get('/news', requireAuth, protectedRoute('news'));
+router.get('/mailing', requireAuth, protectedRoute('mailing'));
+router.get('/message-manager', requireAuth, protectedRoute('message-manager'));
+router.get('/faq', requireAuth, protectedRoute('faq'));
+router.get('/emails', requireAuth, protectedRoute('emails'));
+router.get('/feedback', requireAuth, protectedRoute('feedback'));
+
+router.get('/stats', requireAuth, asyncHandler(async (req, res) => {
+    const stats = await User.getStats();
+    return res.render('nodes/stats', { user: req.user, stats });
+}));
+
+// Auth routes
 router.get('/logout', asyncHandler(async (req, res) => {
-    return res.clearCookie("secretToken").redirect('/login');
+    res.clearCookie("secretToken").redirect('/login');
 }));
 
 router.post('/signup', asyncHandler(async (req, res) => {

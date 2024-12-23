@@ -40,7 +40,6 @@ class Message {
                 .where({ id })
                 .update({
                     news_id: data.news_id,
-                    updated_at: this.db.fn.now()
                 })
                 .returning('*')
                 .join('news', 'messages.news_id', 'news.id')
@@ -60,11 +59,34 @@ class Message {
 
         try {
             const result = await this.db(this.tableName)
-                .where({ id })
+                .where({ 'messages.id': id })
                 .join('news', 'messages.news_id', 'news.id')
                 .select(
                     'messages.*',
                     'news.text as news_text'
+                )
+                .first();
+
+            return result;
+        } catch (err) {
+            console.error('Error fetching message:', err);
+            throw err;
+        }
+    }
+
+    async getByName(name) {
+        if (!name) {
+            throw new Error('Message ID is required');
+        }
+
+        try {
+            const result = await this.db(this.tableName)
+                .where({ name })
+                .join('news', 'messages.news_id', 'news.id')
+                .select(
+                    'messages.*',
+                    'news.id as news_id',
+                    'news.text as news_text',
                 )
                 .first();
 

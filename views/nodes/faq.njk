@@ -1,0 +1,17 @@
+{% set pageTitle = 'Вопрос - ответ' %}
+
+{% extends "layouts/default.njk" %}
+
+{% block bodyContent %}
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <h1 class="section__title">Вопрос - ответ</h1>
+                <div class="section__description">Здесь вы можете задавать ответы на наиболее частные вопросы пользовотелей для отображения данной информации в Телеграм-боте</div>
+                <div class="news" data-react-component="FAQComponent"></div>
+            </div>
+        </section>
+    </main>
+
+{% endblock %}

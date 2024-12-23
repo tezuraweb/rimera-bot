@@ -1,6 +1,6 @@
 import React from 'react';
 
-const NewsItem = ({ news, onSelect, isTemplate = false }) => {
+const NewsItem = ({ news, onSelect, isTemplate = false, isAppeal = false }) => {
     const handleSelect = () => {
         onSelect(news);
     };
@@ -8,14 +8,26 @@ const NewsItem = ({ news, onSelect, isTemplate = false }) => {
     return (
         <div class="list__item">
             <div class="list__text">{news.text}</div>
-            <div class="list__row">
-                <div class="list__link">
-                    <a class="link" href={'https://t.me/' + news.username} target='_blank' rel='nofollow noopener'>{'@' + news.username}</a>
+            {(isAppeal) && (
+                <div class="list__row">
+                    {news.type && (
+                        <div class="list__link">{news.type}: </div>
+                    )}
+
+                    {news.orgname && (
+                        <div class="list__link">{news.orgname}</div>
+                    )}
                 </div>
-                
-                <button class="list__button--right button button--green" onClick={handleSelect}>{isTemplate ? 'Выбрать' : 'Редактировать'}</button>
+            )}
+            <div class="list__row">
+                {news.username && (
+                    <div class="list__link">
+                        <a class="link" href={'https://t.me/' + news.username} target='_blank' rel='nofollow noopener'>{'@' + news.username}</a>
+                    </div>
+                )}
+
+                <button class="list__button--right button button--green" onClick={handleSelect}>{isAppeal ? 'Ответить' : (isTemplate ? 'Выбрать' : 'Редактировать')}</button>
             </div>
-            
         </div>
     );
 };
