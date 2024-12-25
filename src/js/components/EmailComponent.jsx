@@ -153,6 +153,8 @@ const EmailComponent = () => {
             setError(null);
         } catch (err) {
             setError('Не удалось удалить email');
+            setShowDeleteConfirm(false);
+            setItemToDelete(null);
             console.error('Error deleting email:', err);
         }
     };
@@ -354,7 +356,7 @@ const EmailComponent = () => {
                                 Удалить
                             </button>
                             <button
-                                className="button button--gray"
+                                className="button button--gray button--right"
                                 onClick={() => setShowDeleteConfirm(false)}
                             >
                                 Отмена

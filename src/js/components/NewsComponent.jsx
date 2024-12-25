@@ -11,6 +11,35 @@ const NewsComponent = () => {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [channels, setChannels] = useState([]);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
+    const [error, setError] = useState(null);
+
+    const handleDelete = async (item) => {
+        setItemToDelete(item);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        try {
+            await axios.delete(`/api/news/${itemToDelete.id}`);
+            setSelectedNews(null);
+            setNewsList(newsList.filter(news => news.id !== itemToDelete.id));
+            setShowDeleteConfirm(false);
+            setItemToDelete(null);
+            setError(null);
+        } catch (err) {
+            if (err.response?.data?.type === 'has_relations') {
+                setError('Невозможно удалить сообщение, которое используется в статичных рассылках. Пожалуйста, сначала замените сообщение в статичной рассылке.');
+            } else {
+                setError('Не удалось удалить сообщение');
+            }
+            setShowDeleteConfirm(false);
+            setItemToDelete(null);
+            console.error('Error deleting news:', err);
+        }
+    };
+
     const limit = 10;
 
     // Fetch news data at the top level
@@ -90,13 +119,22 @@ const NewsComponent = () => {
                     Архив
                 </button>
             </div>
+
             <NewsList
                 newsList={newsList}
                 onNewsSelect={setSelectedNews}
+                onNewsDelete={handleDelete}
                 isTemplate={activeTab === "templates"}
                 hasMore={hasMore}
                 onLoadMore={loadMoreNews}
             />
+
+            {error && (
+                <div className="control__error">
+                    {error}
+                </div>
+            )}
+
             {selectedNews && (
                 <NewsControlPanel
                     selectedNews={selectedNews}
@@ -111,10 +149,35 @@ const NewsComponent = () => {
                     onNewsPublish={handleNewsPublish}
                 />
             )}
+
             <ChannelManager
                 channels={channels}
                 onChannelsUpdate={setChannels}
             />
+
+            {showDeleteConfirm && (
+                <div className="modal">
+                    <div className="modal__overlay" onClick={() => setShowDeleteConfirm(false)} />
+                    <div className="modal__content">
+                        <h3>Подтверждение удаления</h3>
+                        <p>Вы уверены, что хотите удалить это сообщение?</p>
+                        <div className="modal__buttons">
+                            <button
+                                className="button button--red"
+                                onClick={confirmDelete}
+                            >
+                                Удалить
+                            </button>
+                            <button
+                                className="button button--gray button--right"
+                                onClick={() => setShowDeleteConfirm(false)}
+                            >
+                                Отмена
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

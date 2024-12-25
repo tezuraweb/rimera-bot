@@ -14,7 +14,7 @@ const OrganizationSelection = () => {
     const fetchOrganizations = async () => {
         try {
             const response = await axios.get('/api/organizations');
-            
+
             setOrganizations(response.data);
             setError(null);
         } catch (err) {
@@ -28,9 +28,9 @@ const OrganizationSelection = () => {
     const handleToggle = async (orgId) => {
         setSaving(true);
         try {
-            setOrganizations(orgs => 
-                orgs.map(org => 
-                    org.id === orgId 
+            setOrganizations(orgs =>
+                orgs.map(org =>
+                    org.id === orgId
                         ? { ...org, for_bot: !org.for_bot }
                         : org
                 )
@@ -39,12 +39,12 @@ const OrganizationSelection = () => {
             await axios.post(`/api/organization/enable/${orgId}`, {
                 enabled: !organizations.find(org => org.id === orgId).for_bot
             });
-            
+
             setError(null);
         } catch (err) {
-            setOrganizations(orgs => 
-                orgs.map(org => 
-                    org.id === orgId 
+            setOrganizations(orgs =>
+                orgs.map(org =>
+                    org.id === orgId
                         ? { ...org, for_bot: !org.for_bot }
                         : org
                 )
@@ -61,36 +61,36 @@ const OrganizationSelection = () => {
     }
 
     return (
-        <div className="org-selection">
-            <div className="org-selection__header">
-                <h3>Организации для бота</h3>
-                <div className="tooltip tooltip--blue tooltip--right">
-                    <span className="tooltip__text">
-                        Выберите организации, которые будут доступны в боте
-                    </span>
+        <div className="control">
+            <h2 className="section__title">Организации для бота</h2>
+            <div class="control__description">Выберите организации, которые будут доступны в боте:
+                <div class="tooltip tooltip--green">
+                    <span class="tooltip__text">Список выбранных организаций будет доступен пользователю для выбора при отправке обращений.</span>
                 </div>
             </div>
 
-            {error && (
-                <div className="org-selection__error">
-                    {error}
+            <div className='control__wrapper'>
+                <div className="control__list">
+                    {organizations.map(org => (
+                        <div key={org.id} className="control__item">
+                            <label className="checkbox">
+                                <input
+                                    type="checkbox"
+                                    checked={org.for_bot}
+                                    onChange={() => handleToggle(org.id)}
+                                    disabled={saving}
+                                />
+                                <span className="checkbox__text">{org.name}</span>
+                            </label>
+                        </div>
+                    ))}
                 </div>
-            )}
 
-            <div className="org-selection__list">
-                {organizations.map(org => (
-                    <div key={org.id} className="org-selection__item">
-                        <label className="checkbox">
-                            <input
-                                type="checkbox"
-                                checked={org.for_bot}
-                                onChange={() => handleToggle(org.id)}
-                                disabled={saving}
-                            />
-                            <span className="checkbox__text">{org.name}</span>
-                        </label>
+                {error && (
+                    <div className="control__error">
+                        {error}
                     </div>
-                ))}
+                )}
             </div>
         </div>
     );

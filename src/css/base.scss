@@ -133,6 +133,10 @@ img {
     transition: color .3s, background-color .3s;
     cursor: pointer;
 
+    &--right {
+        margin-left: auto;
+    }
+
     &--green {
         background-color: $rimeraGreen;
     }
@@ -143,6 +147,14 @@ img {
 
     &--orange {
         background-color: $rimeraOrange;
+    }
+
+    &--red {
+        background-color: $rimeraRed;
+    }
+
+    &--gray {
+        background-color: $darkGrey;
     }
 
     &:hover {

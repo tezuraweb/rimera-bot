@@ -169,7 +169,7 @@ const MessageComponent = () => {
         };
     });
 
-    if (isLoading) return <div className="message-groups__loading">Loading messages...</div>;
+    if (isLoading) return <div className="message-groups__loading">Загружаем сообщения...</div>;
     if (error) return <div className="message-groups__error">{error}</div>;
 
     return (
@@ -188,7 +188,7 @@ const MessageComponent = () => {
                                     }}
                                     className="message-item__button"
                                 >
-                                    {message.news_text || 'Select news...'}
+                                    {message.news_text || 'Выбрать сообщение...'}
                                 </button>
                             </div>
                         ))}

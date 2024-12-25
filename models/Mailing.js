@@ -61,6 +61,19 @@ class Mailing {
             console.log(err);
         }
     }
+
+    async delete(id) {
+        if (!id) throw new Error('Mailing ID is required');
+
+        try {
+            await this.db(this.tableName)
+                .where({ id })
+                .delete();
+        } catch (err) {
+            console.error('Error deleting mailing:', err);
+            throw err;
+        }
+    }
 }
 
 module.exports = new Mailing();

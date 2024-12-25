@@ -88,9 +88,15 @@ const AppealControlPanel = ({ selectedAppeal, onAppealUpdate }) => {
                         {files?.length > 0 && (
                             <div className="control__images flex">
                                 {files.map((file, index) => (
-                                    (file.type === 'photo' ? <div className="control__images--item flex-item" key={index}>
-                                        <img src={`/api/tg/image/${file.file_id}`} alt="img" />
-                                    </div> : null)
+                                    (file.type === 'photo' ? (
+                                        <div className="control__images--item flex-item" key={index}>
+                                            <img src={`/api/tg/file/${file.file_id}`} alt="img" />
+                                        </div>
+                                    ) : (
+                                        <div className="control__images--item flex-item" key={index}>
+                                            <a href={`/api/tg/file/${file.file_id}`} class="control__file" download={true}>{file.type}</a>
+                                        </div>
+                                    ))
                                 ))}
                             </div>
                         )}

@@ -69,7 +69,6 @@ exports.up = function(knex) {
             table.specificType('files', 'text ARRAY');
             table.integer('creator').unsigned().references('id').inTable('users');
             table.boolean('template').defaultTo(false);
-            // table.specificType('channels', 'text ARRAY');
             table.timestamps(true, true);
         })
 
@@ -90,13 +89,12 @@ exports.up = function(knex) {
             table.specificType('organization_filter', 'integer ARRAY');
             table.specificType('department_filter', 'integer ARRAY');
             table.specificType('user_filter', 'integer ARRAY');
-            table.specificType('position_filter', 'integer ARRAY'); //change to enum
+            table.specificType('position_filter', 'integer ARRAY');
             table.string('gender_filter'); //change to enum
             table.timestamp('sending_date');
             table.enum('status', ['pending', 'processing', 'completed', 'failed']).defaultTo('pending');
             table.specificType('age_filter', 'integer ARRAY');
             table.integer('creator').unsigned().references('id').inTable('users');
-            // table.specificType('channels', 'text ARRAY'); ???
             table.timestamps(true, true);
         })
 

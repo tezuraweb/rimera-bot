@@ -1,10 +1,6 @@
 import React from 'react';
 
-const NewsItem = ({ news, onSelect, isTemplate = false, isAppeal = false }) => {
-    const handleSelect = () => {
-        onSelect(news);
-    };
-
+const NewsItem = ({ news, onSelect, onDelete, isTemplate = false, isAppeal = false }) => {
     return (
         <div class="list__item">
             <div class="list__text">{news.text}</div>
@@ -19,6 +15,7 @@ const NewsItem = ({ news, onSelect, isTemplate = false, isAppeal = false }) => {
                     )}
                 </div>
             )}
+
             <div class="list__row">
                 {news.username && (
                     <div class="list__link">
@@ -26,7 +23,23 @@ const NewsItem = ({ news, onSelect, isTemplate = false, isAppeal = false }) => {
                     </div>
                 )}
 
-                <button class="list__button--right button button--green" onClick={handleSelect}>{isAppeal ? 'Ответить' : (isTemplate ? 'Выбрать' : 'Редактировать')}</button>
+                {onSelect && (
+                    <button
+                        class="list__button--right button button--green"
+                        onClick={() => onSelect(news)}
+                    >
+                        {isAppeal ? 'Ответить' : (isTemplate ? 'Выбрать' : 'Редактировать')}
+                    </button>
+                )}
+
+                {onDelete && (
+                    <button
+                        className="list__button--right button button--red"
+                        onClick={() => onDelete(news)}
+                    >
+                        ×
+                    </button>
+                )}
             </div>
         </div>
     );
