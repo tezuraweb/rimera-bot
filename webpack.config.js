@@ -1,6 +1,5 @@
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-// const NunjucksHtmlLoader = require('nunjucks-html-loader');
 
 module.exports = {
     entry: [
@@ -62,16 +61,6 @@ module.exports = {
         new MiniCssExtractPlugin({
             filename: 'styles.css',
         }),
-        // new NunjucksHtmlLoader({
-        //     context: { // Данные, которые вы хотите передать в ваш шаблон Nunjucks
-        //         cssBundle: 'styles.css',
-        //         jsBundle: 'bundle.js',
-        //     },
-        //     files: [{
-        //         from: path.resolve(__dirname, 'views/includes/assets.njk'), // Путь к шаблону Nunjucks для генерации assets.html
-        //         to: 'assets.html', // Выходной файл assets.html
-        //     }],
-        // }),
     ],
     devServer: {
         contentBase: path.resolve(__dirname, 'dist'),

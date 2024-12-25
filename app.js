@@ -5,7 +5,6 @@ const { scheduleReminders } = require('./utils/daily-reminder');
 
 const startApp = () => {
     try {
-        // const bot = createBot();
         bot.launch();
         console.log('%s Telegram bot started', dateTimeNow());
 
@@ -13,7 +12,7 @@ const startApp = () => {
     } catch (error) {
         console.log('%s Telegram bot launch error: %s', dateTimeNow(), error);
     }
-    
+
     webPage();
 };
 
