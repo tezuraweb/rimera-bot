@@ -13,9 +13,9 @@ const launchWebpage = () => {
             autoescape: true,
             express: app,
         });
-        
+
         app.set('view engine', 'njk');
-        
+
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
         app.use(cookieParser());
@@ -25,8 +25,12 @@ const launchWebpage = () => {
             res.status(err.status || 500);
             res.json({ error: err });
         });
-        
-        app.listen(Config.PORT);
+
+        const server = app.listen(Config.PORT, Config.HOST, () => {
+            console.log(`Web server is running on ${host}:${port}`);
+        });
+
+        return server;
     } catch (e) {
         console.log(e);
     }
