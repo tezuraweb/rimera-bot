@@ -20,7 +20,8 @@ const MailingControlPanel = ({ selectedMailing }) => {
     const [checkboxEmployee, setCheckboxEmployee] = useState(false);
     const [mailingChanged, setMailingChanged] = useState(false);
     const [mailingUpdated, setMailingUpdated] = useState(false);
-    const [mode, setMode] = useState('filters');    
+    const [mode, setMode] = useState('filters');
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchMailing = async () => {
@@ -41,6 +42,11 @@ const MailingControlPanel = ({ selectedMailing }) => {
 
     useEffect(() => {
         const updateMailing = async () => {
+            if (title === '') {
+                setError('Название не может быть пустым');
+                return;
+            }
+
             const positions = checkboxBoss && checkboxEmployee ? ['boss', 'employee'] : (checkboxBoss ? ['boss'] : (checkboxEmployee ? ['employee'] : null));
             const formData = {
                 title,
@@ -57,26 +63,32 @@ const MailingControlPanel = ({ selectedMailing }) => {
                     .post(`api/mailing/update/${selectedMailing.id}`, formData)
                     .then((response) => {
                         console.log('Mailing updated:', response.data);
+                        setMailingChanged(false);
+                        setMailingUpdated(false);
+                        setError(null);
                     })
                     .catch((error) => {
                         console.error('Error updating mailing:', error);
+                        setError('Ошибка обновления рассылки');
                     });
             } else {
                 axios
                     .post('api/mailing/create', formData)
                     .then((response) => {
                         console.log('Mailing created:', response.data);
+                        setMailingChanged(false);
+                        setMailingUpdated(false);
+                        setError(null);
                     })
                     .catch((error) => {
                         console.error('Error creating mailing:', error);
+                        setError('Ошибка создания рассылки');
                     });
             }
         };
 
         if (mailingUpdated) {
             updateMailing();
-            setMailingChanged(false);
-            setMailingUpdated(false);
         }
     }, [mailingUpdated]);
 
@@ -88,7 +100,7 @@ const MailingControlPanel = ({ selectedMailing }) => {
             setMode('filters');
             setOrganization(data.organization_filter || []);
             setDepartment(data.department_filter || []);
-            
+
 
             if (data.position_filter !== null && data.position_filter.length > 0) {
                 setPosition(true);
@@ -106,7 +118,6 @@ const MailingControlPanel = ({ selectedMailing }) => {
         }
 
         setTitle(data.name || '');
-        // setDate(data.date || null);
     };
 
     const handleGenderChange = (event) => {
@@ -218,7 +229,7 @@ const MailingControlPanel = ({ selectedMailing }) => {
                             />
                             Рядовой сотрудник
                         </label>
-                        <button 
+                        <button
                             class="filter__active--button button button--blue"
                             onClick={() => {
                                 setPosition(false);
@@ -252,7 +263,7 @@ const MailingControlPanel = ({ selectedMailing }) => {
                             />
                             Ж
                         </label>
-                        <button 
+                        <button
                             class="filter__active--button button button--blue"
                             onClick={() => {
                                 setGender(false);
@@ -318,18 +329,18 @@ const MailingControlPanel = ({ selectedMailing }) => {
                         >Добавить фильтр</button>
                     )}
 
-                    {/* <label>
-                        Дата рассылки:
-                        <br />
-                        <DatePicker selected={date} onChange={(date) => setDate(date)} />
-                    </label> */}
-
                     {mailingChanged && (
                         <button class="button control__row--item button--blue" onClick={() => setMailingUpdated(true)}>Сохранить</button>
                     )}
                 </div>
 
-                {/* <button>Удалить рассылку</button> */}
+                <div class="control__row">
+                    {error && (
+                        <div className="control__error">
+                            {error}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

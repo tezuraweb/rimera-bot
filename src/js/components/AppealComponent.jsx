@@ -19,6 +19,10 @@ const AppealComponent = () => {
     const [appealList, setAppealList] = useState([]);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
+    const [error, setError] = useState(null);
+
     const limit = 10;
 
     useEffect(() => {
@@ -63,6 +67,27 @@ const AppealComponent = () => {
         setSelectedAppeal(null);
     };
 
+    const handleDelete = async (item) => {
+        setItemToDelete(item);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        try {
+            await axios.delete(`/api/appeal/${itemToDelete.id}`);
+            setSelectedAppeal(null);
+            setAppealList(appealList.filter(appeal => appeal.id !== itemToDelete.id));
+            setShowDeleteConfirm(false);
+            setItemToDelete(null);
+            setError(null);
+        } catch (err) {
+            setError('Не удалось удалить обращение');
+            setShowDeleteConfirm(false);
+            setItemToDelete(null);
+            console.error('Error deleting appeal:', err);
+        }
+    };
+
     return (
         <div className="news__wrapper">
             <div className="news__tabs">
@@ -79,20 +104,54 @@ const AppealComponent = () => {
                     Архив
                 </button>
             </div>
+
             <NewsList
                 newsList={appealList}
                 onNewsSelect={setSelectedAppeal}
+                onNewsDelete={(activeTab === 'archive') ? handleDelete : null}
                 hasMore={hasMore}
                 isAppeal={true}
                 onLoadMore={loadMore}
             />
+
+            {error && (
+                <div className="control__error">
+                    {error}
+                </div>
+            )}
+
             {selectedAppeal && (
                 <AppealControlPanel
                     selectedAppeal={selectedAppeal}
                     onAppealUpdate={handleAppealUpdate}
                 />
             )}
+
             <OrganizationSelection />
+
+            {showDeleteConfirm && (
+                <div className="modal">
+                    <div className="modal__overlay" onClick={() => setShowDeleteConfirm(false)} />
+                    <div className="modal__content">
+                        <h3>Подтверждение удаления</h3>
+                        <p>Вы уверены, что хотите удалить это обращение?</p>
+                        <div className="modal__buttons">
+                            <button
+                                className="button button--red"
+                                onClick={confirmDelete}
+                            >
+                                Удалить
+                            </button>
+                            <button
+                                className="button button--gray button--right"
+                                onClick={() => setShowDeleteConfirm(false)}
+                            >
+                                Отмена
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

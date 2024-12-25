@@ -62,6 +62,8 @@ const ChannelManager = ({ channels, onChannelsUpdate }) => {
             setError(null);
         } catch (err) {
             setError('Failed to delete channel');
+            setShowDeleteConfirm(false);
+            setItemToDelete(null);
             console.error('Error deleting channel:', err);
         }
     };
@@ -179,7 +181,7 @@ const ChannelManager = ({ channels, onChannelsUpdate }) => {
                                 Удалить
                             </button>
                             <button 
-                                className="button button--gray"
+                                className="button button--gray button--right"
                                 onClick={() => setShowDeleteConfirm(false)}
                             >
                                 Отмена

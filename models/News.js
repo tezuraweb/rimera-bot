@@ -118,15 +118,21 @@ class News {
         }
     }
 
-    async deleteNews(id) {
+    async delete(id) {
         if (!id) {
             throw new Error('News ID is required');
         }
 
         return this.db(this.tableName)
             .where({ id })
-            .del()
-            .returning('id');
+            .delete();
+    }
+
+    async hasRelatedMessages(id) {
+        const result = await this.db('messages')
+            .where('news_id', id)
+            .first();
+        return !!result;
     }
 }
 

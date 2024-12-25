@@ -168,6 +168,24 @@ router.post('/news/publish/:id', validateId, async (req, res) => {
     }
 });
 
+router.delete('/news/:id', validateId, async (req, res) => {
+    try {
+        const hasMessages = await News.hasRelatedMessages(req.validatedId);
+        if (hasMessages) {
+            return res.status(409).json({ 
+                error: 'Cannot delete news that is used in messages. Please update or remove related messages first.',
+                type: 'has_relations'
+            });
+        }
+
+        await News.delete(req.validatedId);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error deleting news:', err);
+        res.status(500).json({ error: 'Failed to delete news' });
+    }
+});
+
 // Mailing routes
 router.get('/mailing/list', async (req, res) => {
     try {
@@ -187,7 +205,6 @@ router.post('/mailing/create', async (req, res) => {
             'date'
         ]);
 
-        // Basic validation
         if (!mailingData.title) {
             return res.status(400).json({ error: 'Title is required' });
         }
@@ -226,6 +243,16 @@ router.get('/mailing/:id', validateId, async (req, res) => {
     } catch (err) {
         console.error('Error fetching mailing:', err);
         res.status(500).json({ error: 'Failed to fetch mailing' });
+    }
+});
+
+router.delete('/mailing/:id', validateId, async (req, res) => {
+    try {
+        await Mailing.delete(req.validatedId);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error deleting mailing:', err);
+        res.status(500).json({ error: 'Failed to delete mailing' });
     }
 });
 
@@ -349,8 +376,7 @@ router.get('/department/search', async (req, res) => {
 // User routes
 router.get('/users', async (req, res) => {
     try {
-        const filters = pick(req.query, ['department', 'organization', 'position', 'gender']);
-        const users = await User.getUsersWithFilter(filters);
+        const users = await User.getAll();
         res.json(users);
     } catch (err) {
         console.error('Error fetching users:', err);
@@ -803,6 +829,16 @@ router.post('/appeal/reply/:id', validateId, async (req, res) => {
     }
 });
 
+router.delete('/appeal/:id', validateId, async (req, res) => {
+    try {
+        await Appeal.delete(req.validatedId);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error deleting appeal:', err);
+        res.status(500).json({ error: 'Failed to delete appeal' });
+    }
+});
+
 // Files
 
 router.get('/files/news/:id', validateId, async (req, res) => {
@@ -839,7 +875,7 @@ router.get('/files/appeal/:id', validateId, async (req, res) => {
 });
 
 // Telegram image
-router.get('/tg/image/:id', async (req, res) => {
+router.get('/tg/file/:id', async (req, res) => {
     try {
         const id = req.params.id;
         const response = await axios.get(`https://api.telegram.org/bot${Config.TELEGRAM_TOKEN}/getFile?file_id=${id}`);

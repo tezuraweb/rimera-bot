@@ -1,12 +1,13 @@
 import React from 'react';
 import NewsItem from './NewsItem';
 
-const NewsList = ({ 
-    newsList, 
-    onNewsSelect, 
+const NewsList = ({
+    newsList,
+    onNewsSelect,
+    onNewsDelete,
     isTemplate,
     isAppeal,
-    hasMore, 
+    hasMore,
     onLoadMore
 }) => {
     return (
@@ -17,6 +18,7 @@ const NewsList = ({
                         key={news.id}
                         news={news}
                         onSelect={onNewsSelect}
+                        onDelete={onNewsDelete}
                         isTemplate={isTemplate}
                         isAppeal={isAppeal}
                     />
