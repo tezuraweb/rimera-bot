@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import ModalDelete from './ModalDelete';
 
 const EmailComponent = () => {
     const [emailList, setEmailList] = useState([]);
@@ -343,27 +344,11 @@ const EmailComponent = () => {
             </form>
 
             {showDeleteConfirm && (
-                <div className="modal">
-                    <div className="modal__overlay" onClick={() => setShowDeleteConfirm(false)} />
-                    <div className="modal__content">
-                        <h3>Подтверждение удаления</h3>
-                        <p>Вы уверены, что хотите удалить этот email?</p>
-                        <div className="modal__buttons">
-                            <button
-                                className="button button--red"
-                                onClick={confirmDelete}
-                            >
-                                Удалить
-                            </button>
-                            <button
-                                className="button button--gray button--right"
-                                onClick={() => setShowDeleteConfirm(false)}
-                            >
-                                Отмена
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <ModalDelete
+                    text={'Вы уверены, что хотите удалить этот email?'}
+                    setShowDeleteConfirm={setShowDeleteConfirm}
+                    confirmDelete={confirmDelete}
+                />
             )}
         </div>
     );

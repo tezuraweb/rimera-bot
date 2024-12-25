@@ -3,6 +3,7 @@ import axios from 'axios';
 import NewsList from './NewsList';
 import AppealControlPanel from './AppealControlPanel';
 import OrganizationSelection from './OrganizationSelection';
+import ModalDelete from './ModalDelete';
 
 const types = {
     appeal_feature: 'Предложение по улучшению',
@@ -130,27 +131,11 @@ const AppealComponent = () => {
             <OrganizationSelection />
 
             {showDeleteConfirm && (
-                <div className="modal">
-                    <div className="modal__overlay" onClick={() => setShowDeleteConfirm(false)} />
-                    <div className="modal__content">
-                        <h3>Подтверждение удаления</h3>
-                        <p>Вы уверены, что хотите удалить это обращение?</p>
-                        <div className="modal__buttons">
-                            <button
-                                className="button button--red"
-                                onClick={confirmDelete}
-                            >
-                                Удалить
-                            </button>
-                            <button
-                                className="button button--gray button--right"
-                                onClick={() => setShowDeleteConfirm(false)}
-                            >
-                                Отмена
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <ModalDelete
+                    text={'Вы уверены, что хотите удалить это обращение?'}
+                    setShowDeleteConfirm={setShowDeleteConfirm}
+                    confirmDelete={confirmDelete}
+                />
             )}
         </div>
     );
