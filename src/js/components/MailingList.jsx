@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import MailingItem from './MailingItem';
+import ModalDelete from './ModalDelete';
 
 const MailingList = ({ updateSelectedMailing }) => {
     const [mailingList, setMailingList] = useState([]);
@@ -60,27 +61,11 @@ const MailingList = ({ updateSelectedMailing }) => {
             </div>
 
             {showDeleteConfirm && (
-                <div className="modal">
-                    <div className="modal__overlay" onClick={() => setShowDeleteConfirm(false)} />
-                    <div className="modal__content">
-                        <h3>Подтверждение удаления</h3>
-                        <p>Вы уверены, что хотите удалить эту рассылку?</p>
-                        <div className="modal__buttons">
-                            <button
-                                className="button button--red"
-                                onClick={confirmDelete}
-                            >
-                                Удалить
-                            </button>
-                            <button
-                                className="button button--gray button--right"
-                                onClick={() => setShowDeleteConfirm(false)}
-                            >
-                                Отмена
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <ModalDelete
+                    text={'Вы уверены, что хотите удалить эту рассылку?'}
+                    setShowDeleteConfirm={setShowDeleteConfirm}
+                    confirmDelete={confirmDelete}
+                />
             )}
         </div>
     );

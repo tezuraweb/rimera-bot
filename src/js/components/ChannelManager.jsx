@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import ModalDelete from './ModalDelete';
 
 const ChannelManager = ({ channels, onChannelsUpdate }) => {
     const [selectedChannel, setSelectedChannel] = useState(null);
@@ -11,7 +12,7 @@ const ChannelManager = ({ channels, onChannelsUpdate }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!link) {
             setError('Link is required');
             return;
@@ -23,7 +24,7 @@ const ChannelManager = ({ channels, onChannelsUpdate }) => {
                     link,
                     name
                 });
-                onChannelsUpdate(channels.map(ch => 
+                onChannelsUpdate(channels.map(ch =>
                     ch.id === selectedChannel.id ? response.data : ch
                 ));
             } else {
@@ -84,14 +85,14 @@ const ChannelManager = ({ channels, onChannelsUpdate }) => {
                         <div key={channel.id} className="list__item">
                             <div className="list__text">{channel.name || channel.link}</div>
                             <div className="list__row">
-                                <button 
-                                    className="list__button--left button button--blue" 
+                                <button
+                                    className="list__button--left button button--blue"
                                     onClick={() => handleSelect(channel)}
                                 >
                                     Выбрать
                                 </button>
-                                <button 
-                                    className="list__button--right button button--red" 
+                                <button
+                                    className="list__button--right button button--red"
                                     onClick={() => handleDelete(channel)}
                                 >
                                     ×
@@ -143,14 +144,14 @@ const ChannelManager = ({ channels, onChannelsUpdate }) => {
                 </div>
 
                 <div className="control__buttons">
-                    <button 
-                        type="submit" 
+                    <button
+                        type="submit"
                         className="button button--green"
                     >
                         {selectedChannel ? 'Обновить' : 'Добавить'} канал
                     </button>
                     {selectedChannel && (
-                        <button 
+                        <button
                             type="button"
                             className="button button--gray"
                             onClick={resetForm}
@@ -168,27 +169,11 @@ const ChannelManager = ({ channels, onChannelsUpdate }) => {
             </form>
 
             {showDeleteConfirm && (
-                <div className="modal">
-                    <div className="modal__overlay" onClick={() => setShowDeleteConfirm(false)} />
-                    <div className="modal__content">
-                        <h3>Подтверждение удаления</h3>
-                        <p>Вы уверены, что хотите удалить этот канал?</p>
-                        <div className="modal__buttons">
-                            <button 
-                                className="button button--red"
-                                onClick={confirmDelete}
-                            >
-                                Удалить
-                            </button>
-                            <button 
-                                className="button button--gray button--right"
-                                onClick={() => setShowDeleteConfirm(false)}
-                            >
-                                Отмена
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <ModalDelete
+                    text={'Вы уверены, что хотите удалить этот канал?'}
+                    setShowDeleteConfirm={setShowDeleteConfirm}
+                    confirmDelete={confirmDelete}
+                />
             )}
         </div>
     );
