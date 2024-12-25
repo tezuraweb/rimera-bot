@@ -8,9 +8,6 @@ exports.up = function(knex) {
         .createTable('organizations', table => {
             table.increments('id').primary();
             table.string('name').notNullable();
-            table.string('address');
-            table.jsonb('contact_info');
-            table.boolean('is_active').defaultTo(true);
             table.string('outer_id');
             table.timestamps(true, true);
         })
@@ -20,8 +17,6 @@ exports.up = function(knex) {
             table.increments('id').primary();
             table.string('name').notNullable();
             table.integer('parent_id').unsigned().references('id').inTable('departments');
-            table.integer('organization_id').unsigned().references('id').inTable('organizations');
-            table.string('description');
             table.string('outer_id');
             table.timestamps(true, true);
         })
@@ -31,7 +26,6 @@ exports.up = function(knex) {
             table.increments('id').primary();
             table.string('name').notNullable();
             table.string('category');
-            table.string('description');
             table.integer('parent_id').unsigned().references('id').inTable('position');
             table.string('outer_id');
             table.timestamps(true, true);
@@ -48,7 +42,6 @@ exports.up = function(knex) {
             table.string('user_outer_id');
             table.enum('status', ['admin', 'user']).defaultTo('user');
             table.enum('gender', ['M', 'F']);
-            table.boolean('is_active').defaultTo(true);
             table.integer('organization').unsigned().references('id').inTable('organizations');
             table.integer('department').unsigned().references('id').inTable('departments');
             table.integer('position').unsigned().references('id').inTable('position');
@@ -90,7 +83,7 @@ exports.up = function(knex) {
             table.specificType('department_filter', 'integer ARRAY');
             table.specificType('user_filter', 'integer ARRAY');
             table.specificType('position_filter', 'integer ARRAY');
-            table.string('gender_filter'); //change to enum
+            table.string('gender_filter');
             table.timestamp('sending_date');
             table.enum('status', ['pending', 'processing', 'completed', 'failed']).defaultTo('pending');
             table.specificType('age_filter', 'integer ARRAY');

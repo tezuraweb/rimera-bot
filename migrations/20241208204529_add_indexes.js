@@ -18,7 +18,6 @@ exports.up = function (knex) {
         // Departments indexes
         .alterTable('departments', table => {
             table.index('parent_id');
-            table.index('organization_id');
             table.index('outer_id');
         })
         // News indexes
