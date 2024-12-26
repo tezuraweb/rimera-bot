@@ -35,7 +35,7 @@ class PublishNewsScene {
         };
 
         const keyboard = Markup.inlineKeyboard([
-            [Markup.button.callback('📰 Следующая новость', 'next_news')],
+            [Markup.button.callback('📰 Показать новости', 'next_news')],
             [Markup.button.callback('⬅️ Назад', 'back')]
         ]);
 
@@ -65,7 +65,7 @@ class PublishNewsScene {
                 return ctx.reply('Нет новостей для публикации');
             }
 
-            if (ctx.session.publishNews.currentNews === null || ctx.session.publishNews.currentNews === undefined) {
+            if ((ctx.session.publishNews.currentNews === null) || (ctx.session.publishNews.currentNews === undefined) || (ctx.session.publishNews.currentNews + 1 == ctx.session.publishNews.inbox?.length)) {
                 ctx.session.publishNews.currentNews = 0;
             } else {
                 ctx.session.publishNews.currentNews = ctx.session.publishNews.currentNews + 1;
@@ -75,7 +75,10 @@ class PublishNewsScene {
 
             const keyboard = Markup.inlineKeyboard([
                 [Markup.button.callback('✅ Выбрать новость', 'select_news')],
-                [Markup.button.callback('📰 Следующая новость', 'next_news')],
+                [Markup.button.callback(`${
+                    (ctx.session.publishNews.currentNews == ctx.session.publishNews.inbox?.length - 1) ? 
+                    '⬆️ В начало' :
+                    '📰 Следующая новость' }`, 'next_news')],
                 [Markup.button.callback('⬅️ Назад', 'back')]
             ]);
 

@@ -26,9 +26,13 @@ const launchWebpage = () => {
             res.json({ error: err });
         });
 
-        const server = app.listen(Config.PORT, Config.HOST, () => {
-            console.log(`Web server is running on ${host}:${port}`);
-        });
+        const server = Config.NODE_ENV === 'production' ?
+            app.listen(Config.PORT, Config.HOST, () => {
+                console.log(`Web server is running on ${Config.HOST}:${Config.PORT}`);
+            }) :
+            app.listen(Config.PORT, () => {
+                console.log(`Web server is running on localhost:${Config.PORT}`);
+            });
 
         return server;
     } catch (e) {
