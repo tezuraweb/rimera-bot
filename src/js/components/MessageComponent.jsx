@@ -30,7 +30,7 @@ const GROUPS = [
         ]
     },
     {
-        id: 2,
+        id: 3,
         title: 'Знакомство с компанией',
         messageNames: [
             { name: 'company_intro', title: 'Входное сообщение' },
@@ -41,7 +41,7 @@ const GROUPS = [
         ]
     },
     {
-        id: 2,
+        id: 4,
         title: 'Разделы новостей',
         messageNames: [
             { name: 'news_digest', title: 'Вход в дайджест' },
@@ -50,14 +50,14 @@ const GROUPS = [
         ]
     },
     {
-        id: 2,
+        id: 5,
         title: 'Часто задаваемые вопросы',
         messageNames: [
             { name: 'faq_intro', title: 'Входное сообщение' },
         ]
     },
     {
-        id: 2,
+        id: 6,
         title: 'Вакансии',
         messageNames: [
             { name: 'vacancies_intro', title: 'Входное сообщение' },
