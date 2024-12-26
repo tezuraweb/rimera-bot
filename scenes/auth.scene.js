@@ -94,9 +94,7 @@ class AuthScene {
                 return ctx.scene.enter('ADMIN_MENU_SCENE');
             }
 
-            const authRecord = await knex('auth')
-                .where('user_id', updatedUser.id)
-                .first();
+            const authRecord = await Auth.getByUserId(updatedUser.id);
 
             if (authRecord) {
                 ctx.session.auth = authRecord;
@@ -110,13 +108,7 @@ class AuthScene {
                     return ctx.scene.enter('GREETING_SCENE');
                 }
             } else {
-                const [newAuthRecord] = await knex('auth')
-                    .insert({
-                        user_id: updatedUser.id,
-                        counter: 2,
-                        subscription: false
-                    })
-                    .returning('*');
+                const newAuthRecord = await Auth.create(updatedUser.id);
 
                 ctx.session.auth = newAuthRecord;
                 return ctx.scene.enter('GREETING_SCENE');

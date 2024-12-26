@@ -140,7 +140,7 @@ class User {
             'tgchat': chatId,
         })
             .where({ id })
-            .returning('id', 'name', 'status', 'phone')
+            .returning(['id', 'name', 'status', 'phone'])
             .then((data) => data[0]);
     }
 
