@@ -40,7 +40,7 @@ const sendMessage = async (ctx, options = {}) => {
         if (options.messageName) {
             const message = await Messages.getByName(options.messageName);
             let files = [];
-            
+
             if (message) {
                 try {
                     files = await NewsFiles.getFilesByNews(message.news_id);
@@ -96,10 +96,18 @@ const sendMessage = async (ctx, options = {}) => {
                 });
 
                 if (mediaGroupFiles.length > 0) {
-                    if (options.chatId) {
-                        await ctx.sendMediaGroup(options.chatId, mediaGroupFiles);
-                    } else {
-                        await ctx.replyWithMediaGroup(mediaGroupFiles);
+                    try {
+                        if (options.chatId) {
+                            await ctx.sendMediaGroup(options.chatId, mediaGroupFiles);
+                        } else {
+                            await ctx.replyWithMediaGroup(mediaGroupFiles);
+                        }
+                    } catch (error) {
+                        if (options.chatId) {
+                            await ctx.sendMessage(options.chatId, messageData.text);
+                        } else {
+                            await ctx.reply(messageData.text);
+                        }
                     }
                 }
             } else if (messageData.text) {
@@ -111,23 +119,31 @@ const sendMessage = async (ctx, options = {}) => {
             }
 
             if (!options.chatId) {
-                for (const type in fileGroups) {
-                    if (type !== 'photo' && type !== 'video') {
-                        for (const file of fileGroups[type]) {
-                            switch (type) {
-                                case 'document':
-                                    await ctx.replyWithDocument(file.file_id);
-                                    break;
-                                case 'audio':
-                                    await ctx.replyWithAudio(file.file_id);
-                                    break;
-                                case 'voice':
-                                    await ctx.replyWithVoice(file.file_id);
-                                    break;
-                                default:
-                                    await ctx.replyWithDocument(file.file_id);
+                try {
+                    for (const type in fileGroups) {
+                        if (type !== 'photo' && type !== 'video') {
+                            for (const file of fileGroups[type]) {
+                                switch (type) {
+                                    case 'document':
+                                        await ctx.replyWithDocument(file.file_id);
+                                        break;
+                                    case 'audio':
+                                        await ctx.replyWithAudio(file.file_id);
+                                        break;
+                                    case 'voice':
+                                        await ctx.replyWithVoice(file.file_id);
+                                        break;
+                                    default:
+                                        await ctx.replyWithDocument(file.file_id);
+                                }
                             }
                         }
+                    }
+                } catch (error) {
+                    if (options.chatId) {
+                        await ctx.sendMessage(options.chatId, messageData.text);
+                    } else {
+                        await ctx.reply(messageData.text, messageData.keyboard || {});
                     }
                 }
             }
