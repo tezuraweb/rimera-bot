@@ -27,7 +27,7 @@ class AppealScene {
         scene.on('text', this.handleText.bind(this));
         scene.on(['photo', 'video'], this.handleMedia.bind(this));
         scene.on('edited_message', this.handleEdit.bind(this));
-        scene.on('message_delete', this.handleDelete.bind(this));
+        // scene.on('message_delete', this.handleDelete.bind(this));
 
         return scene;
     }
@@ -41,6 +41,19 @@ class AppealScene {
             ...orgButtons,
             [Markup.button.callback('⬅️ Назад', 'back')]
         ]);
+    }
+
+    getStaticKeyboard(ctx) {
+        if (!ctx.session.appealData.text) {
+            return Markup.inlineKeyboard([
+                [Markup.button.callback('⬅️ Назад', 'back')]
+            ]);
+        } else {
+            return Markup.inlineKeyboard([
+                [Markup.button.callback('📤 Отправить обращениe', 'send')],
+                [Markup.button.callback('⬅️ Назад', 'back')]
+            ]);
+        }
     }
 
     async initSession(ctx) {
@@ -69,11 +82,8 @@ class AppealScene {
         ctx.session.appealData.organization = orgId;
 
         await ctx.reply(
-            `Пожалуйста, напишите ваш текст обращения:`,
-            Markup.inlineKeyboard([
-                [Markup.button.callback('📤 Отправить обращениe', 'send')],
-                [Markup.button.callback('⬅️ Назад', 'back')]
-            ])
+            `Пожалуйста, напишите текст вашего обращения:`,
+            this.getStaticKeyboard(ctx)
         );
     }
 
@@ -107,20 +117,32 @@ class AppealScene {
 
     async handleText(ctx) {
         if (!ctx.session.appealData.organization) {
-            return ctx.reply('Пожалуйста, сначала выберите организацию.');
+            return ctx.reply(
+                'Пожалуйста, сначала выберите организацию.',
+                this.getStaticKeyboard(ctx)
+            );
         }
 
         if (ctx.session.appealData.text) {
-            return ctx.reply('Текст уже добавлен. Отредактируйте существующее сообщение, если хотите его изменить.');
+            return ctx.reply(
+                'Текст уже добавлен. Отредактируйте существующее сообщение, если хотите его изменить.',
+                this.getStaticKeyboard(ctx)
+            );
         }
 
         if (ctx.message.text.length > MAX_TEXT_LENGTH) {
-            return ctx.reply(`Текст превышает ${MAX_TEXT_LENGTH} символов. Сократите сообщение.`);
+            return ctx.reply(
+                `Текст превышает ${MAX_TEXT_LENGTH} символов. Сократите сообщение.`,
+                this.getStaticKeyboard(ctx)
+            );
         }
 
         ctx.session.appealData.text = ctx.message.text;
         ctx.session.appealData.textMessageId = ctx.message.message_id;
-        await ctx.reply('Текст сохранен. Добавьте медиафайлы или отправьте обращение.');
+        await ctx.reply(
+            'Текст сохранен. Добавьте медиафайлы или отправьте обращение.',
+            this.getStaticKeyboard(ctx)
+        );
     }
 
     async handleMedia(ctx) {
@@ -143,7 +165,10 @@ class AppealScene {
             fileId = ctx.message.voice.file_id;
             fileType = 'voice';
         } else {
-            await ctx.reply('Неподдерживаемый тип медиафайла.');
+            await ctx.reply(
+                'Неподдерживаемый тип медиафайла.',
+                this.getStaticKeyboard(ctx)
+            );
             return;
         }
 
@@ -152,7 +177,10 @@ class AppealScene {
             fileType,
             messageId: ctx.message.message_id
         });
-        await ctx.reply('Медиафайл добавлен.');
+        await ctx.reply(
+            'Медиафайл добавлен.',
+            this.getStaticKeyboard(ctx)
+        );
     }
 
     async handleEdit(ctx) {
@@ -160,29 +188,41 @@ class AppealScene {
             ctx.editedMessage.message_id === ctx.session.appealData.textMessageId) {
 
             if (ctx.editedMessage.text.length > MAX_TEXT_LENGTH) {
-                return ctx.reply(`Текст превышает ${MAX_TEXT_LENGTH} символов. Сократите сообщение.`);
+                return ctx.reply(
+                    `Текст превышает ${MAX_TEXT_LENGTH} символов. Сократите сообщение.`,
+                    this.getStaticKeyboard(ctx)
+                );
             }
 
             ctx.session.appealData.text = ctx.editedMessage.text;
-            await ctx.reply('Текст обращения обновлен.');
+            await ctx.reply(
+                'Текст обращения обновлен.',
+                this.getStaticKeyboard(ctx)
+            );
         }
     }
 
-    async handleDelete(ctx) {
-        if (ctx.message.message_id === ctx.session.appealData.textMessageId) {
-            ctx.session.appealData.text = null;
-            ctx.session.appealData.textMessageId = null;
-            await ctx.reply('Текст обращения удален.');
-        }
+    // async handleDelete(ctx) {
+    //     if (ctx.message.message_id === ctx.session.appealData.textMessageId) {
+    //         ctx.session.appealData.text = null;
+    //         ctx.session.appealData.textMessageId = null;
+    //         await ctx.reply(
+    //             'Текст обращения удален.',
+    //             this.getStaticKeyboard(ctx)
+    //         );
+    //     }
 
-        ctx.session.appealData.files = ctx.session.appealData.files.filter(
-            file => file.messageId !== ctx.message.message_id
-        );
-    }
+    //     ctx.session.appealData.files = ctx.session.appealData.files.filter(
+    //         file => file.messageId !== ctx.message.message_id
+    //     );
+    // }
 
     async handleSend(ctx) {
         if (!ctx.session.appealData.text) {
-            return ctx.reply('Необходимо добавить текст обращения!');
+            return ctx.reply(
+                'Необходимо добавить текст обращения!',
+                this.getStaticKeyboard(ctx)
+            );
         }
 
         try {

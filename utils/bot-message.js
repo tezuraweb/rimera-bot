@@ -3,8 +3,10 @@ const NewsFiles = require('../models/NewsFiles');
 const { dateTimeNow } = require('./logging');
 
 const defaultValues = {
-    'greeting_welcome': 'добро пожаловать!',
+    'greeting_welcome': 'Добро пожаловать!',
     'greeting_info': 'Это бот компании Римера',
+    'greeting_request_phone': 'Для регистрации отправьте номер телефона',
+    'greeting_not_found': 'Пользователь не найден. Попробуйте еще раз',
     'greeting_subscribe': 'Подпишитесь на наши каналы для использования бота',
     'greeting_remind1': 'Подпишитесь на каналы!',
     'greeting_remind2': 'Подпишитесь на каналы!',

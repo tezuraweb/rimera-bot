@@ -20,27 +20,13 @@ class GreetingScene {
 
             ctx.session.greetingScene = {
                 channels: channels,
-                currentStep: 'welcome',
-                messageQueue: ['greeting_welcome', 'greeting_info']
             };
 
-            await this.processMessageQueue(ctx);
+            return this.showSubscriptionMessage(ctx);
         } catch (error) {
             console.error('Error initializing greeting scene:', error);
             await ctx.reply('Произошла ошибка. Попробуйте позже.');
         }
-    }
-
-    async processMessageQueue(ctx) {
-        if (!ctx.session.greetingScene.messageQueue.length) {
-            return this.showSubscriptionMessage(ctx);
-        }
-
-        const messageName = ctx.session.greetingScene.messageQueue.shift();
-
-        await sendMessage(ctx, { messageName: messageName });
-
-        return this.processMessageQueue(ctx);
     }
 
     async showSubscriptionMessage(ctx) {

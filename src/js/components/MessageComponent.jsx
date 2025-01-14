@@ -9,6 +9,8 @@ const GROUPS = [
         messageNames: [
             { name: 'greeting_welcome', title: 'Первое приветствие' },
             { name: 'greeting_info', title: 'Информация' },
+            { name: 'greeting_request_phone', title: 'Просьба отправить телефон' },
+            { name: 'greeting_not_found', title: 'Пользователь не найден' },
             { name: 'greeting_subscribe', title: 'Просьба подписаться на каналы' },
             { name: 'greeting_remind1', title: 'Напоминание о подписке на каналы 1' },
             { name: 'greeting_remind2', title: 'Напоминание о подписке на каналы 2' },

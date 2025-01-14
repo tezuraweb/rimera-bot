@@ -1,12 +1,16 @@
 const { Scenes, Markup } = require('telegraf');
 const User = require('../models/User');
 const Auth = require('../models/Auth');
+const { sendMessage } = require('../utils/bot-message');
 
 class AuthScene {
     constructor() {
         const scene = new Scenes.BaseScene('AUTH_SCENE');
         
         scene.enter(async (ctx) => {
+            await sendMessage(ctx, { messageName: 'greeting_welcome' });
+            await sendMessage(ctx, { messageName: 'greeting_info' });
+
             const user = await User.getUser(ctx.from.id);
             
             if (!user) {
@@ -25,15 +29,8 @@ class AuthScene {
         return scene;
     }
 
-    requestCredentials(ctx) {
-        const keyboard = Markup.keyboard([
-            [Markup.button.contactRequest('📱 Отправить номер телефона')]
-        ]).resize();
-
-        return ctx.reply(
-            "Добро пожаловать! Для регистрации отправьте номер телефона или табельный номер",
-            keyboard
-        );
+    async requestCredentials(ctx) {
+        await sendMessage(ctx, { messageName: 'greeting_request_phone' });
     }
 
     async handleExistingUser(ctx, user) {
@@ -76,7 +73,8 @@ class AuthScene {
             const user = await User.getByNumber(input);
 
             if (!user) {
-                return ctx.reply("Пользователь не найден. Попробуйте еще раз.");
+                await sendMessage(ctx, { messageName: 'greeting_not_found' });
+                return;
             }
 
             if (user.status === 'fired') {

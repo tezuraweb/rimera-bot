@@ -51,10 +51,10 @@ class MainMenuScene {
 
     async showDigest(ctx) {
         const keyboard = Markup.inlineKeyboard([
-            [Markup.button.callback('Курс Римеры', 'digest_course')],
+            [Markup.button.callback('Курс Римера', 'digest_course')],
             [Markup.button.url(
                 'Новостной дайджест «Click&Read»',
-                'https://myhyperspace.hprspc.com/'
+                'https://news.hprspace.com/'
             )],
             [Markup.button.callback('Назад', 'back')],
         ]);

@@ -5,7 +5,7 @@ const NewsChannel = require('../models/NewsChannel');
 const NewsFiles = require('../models/NewsFiles');
 const { sendMessage } = require('../utils/bot-message');
 
-const MAX_TEXT_LENGTH = 1024; 
+const MAX_TEXT_LENGTH = 1024;
 const HELP_TEXT = `
 📝 Создание новости:
 
@@ -14,13 +14,12 @@ const HELP_TEXT = `
 3. Нажмите "Отправить новость"
 
 ✏️ Чтобы изменить текст - отредактируйте исходное сообщение
-❌ Чтобы удалить медиафайл - удалите сообщение с ним
 `.trim();
 
 class NewsScene {
     constructor() {
         const scene = new Scenes.BaseScene('ADD_NEWS_SCENE');
-        
+
         scene.enter(this.initSession.bind(this));
         scene.on('text', this.handleText.bind(this));
         scene.on(['photo', 'video', 'document', 'audio', 'voice'], this.handleMedia.bind(this));
@@ -32,7 +31,7 @@ class NewsScene {
         scene.action('complete_channels', this.handleCompleteChannels.bind(this));
         scene.action(/select_channel_\d+/, this.handleChannelSelection.bind(this));
         scene.on('edited_message', this.handleEdit.bind(this));
-        scene.on('message_delete', this.handleDelete.bind(this));
+        // scene.on('message_delete', this.handleDelete.bind(this));
 
         return scene;
     }
@@ -41,17 +40,28 @@ class NewsScene {
         if (ctx.session.user.status === 'admin') {
             return Markup.inlineKeyboard([
                 [Markup.button.callback(
-                    ctx.session.newsData?.isTemplate ? 'Отменить шаблон' : 'Сделать шаблоном', 
+                    ctx.session.newsData?.isTemplate ? 'Отменить шаблон' : 'Сделать шаблоном',
                     'toggle_template'
-                )],        
-                [Markup.button.callback('📤 Отправить новость', 'send')],
+                )],
                 [Markup.button.callback('❓ Помощь', 'help')],
                 [Markup.button.callback('⬅️ Назад', 'back')]
             ]);
         } else {
             return Markup.inlineKeyboard([
-                [Markup.button.callback('📤 Отправить новость', 'send')],
                 [Markup.button.callback('❓ Помощь', 'help')],
+                [Markup.button.callback('⬅️ Назад', 'back')]
+            ]);
+        }
+    }
+
+    getStaticKeyboard(ctx) {
+        if (!ctx.session.newsData.text) {
+            return Markup.inlineKeyboard([
+                [Markup.button.callback('⬅️ Назад', 'back')]
+            ]);
+        } else {
+            return Markup.inlineKeyboard([
+                [Markup.button.callback('📤 Отправить новость', 'send')],
                 [Markup.button.callback('⬅️ Назад', 'back')]
             ]);
         }
@@ -87,7 +97,7 @@ class NewsScene {
 
         const keyboard = this.buildKeyboard(ctx);
 
-        await sendMessage(ctx, { 
+        await sendMessage(ctx, {
             messageName: 'news_intro',
             keyboard
         });
@@ -95,22 +105,31 @@ class NewsScene {
 
     async handleText(ctx) {
         if (ctx.session.newsData.text) {
-            return ctx.reply('Текст уже добавлен. Отредактируйте существующее сообщение, если хотите его изменить.');
+            return ctx.reply(
+                'Текст уже добавлен. Отредактируйте существующее сообщение, если хотите его изменить.',
+                this.getStaticKeyboard(ctx)
+            );
         }
 
         if (ctx.message.text.length > MAX_TEXT_LENGTH) {
-            return ctx.reply(`Текст превышает ${MAX_TEXT_LENGTH} символов. Сократите сообщение.`);
+            return ctx.reply(
+                `Текст превышает ${MAX_TEXT_LENGTH} символов. Сократите сообщение.`,
+                this.getStaticKeyboard(ctx)
+            );
         }
 
         ctx.session.newsData.text = ctx.message.text;
         ctx.session.newsData.textMessageId = ctx.message.message_id;
-        await ctx.reply('Текст сохранен. Добавьте медиафайлы или отправьте новость.');
+        await ctx.reply(
+            'Текст сохранен. Отправьте новость или дополнительно добавьте к ней медиафайлы.',
+            this.getStaticKeyboard(ctx)
+        );
     }
 
-    async handleMedia(ctx) {        
+    async handleMedia(ctx) {
         let fileId;
         let fileType;
-        
+
         if (ctx.message.photo) {
             fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
             fileType = 'photo';
@@ -127,48 +146,64 @@ class NewsScene {
             fileId = ctx.message.voice.file_id;
             fileType = 'voice';
         } else {
-            await ctx.reply('Неподдерживаемый тип медиафайла.');
+            await ctx.reply(
+                'Неподдерживаемый тип медиафайла.',
+                this.getStaticKeyboard(ctx)
+            );
             return;
         }
 
-
-            
         ctx.session.newsData.files.push({
             fileId,
             fileType,
             messageId: ctx.message.message_id
         });
-        await ctx.reply('Медиафайл добавлен.');
-    }
-
-    async handleEdit(ctx) {
-        if (ctx.editedMessage.text && 
-            ctx.editedMessage.message_id === ctx.session.newsData.textMessageId) {
-            
-            if (ctx.editedMessage.text.length > MAX_TEXT_LENGTH) {
-                return ctx.reply(`Текст превышает ${MAX_TEXT_LENGTH} символов. Сократите сообщение.`);
-            }
-
-            ctx.session.newsData.text = ctx.editedMessage.text;
-            await ctx.reply('Текст новости обновлен.');
-        }
-    }
-
-    async handleDelete(ctx) {
-        if (ctx.message.message_id === ctx.session.newsData.textMessageId) {
-            ctx.session.newsData.text = null;
-            ctx.session.newsData.textMessageId = null;
-            await ctx.reply('Текст новости удален.');
-        }
-
-        ctx.session.newsData.files = ctx.session.newsData.files.filter(
-            file => file.messageId !== ctx.message.message_id
+        await ctx.reply(
+            'Медиафайл добавлен.',
+            this.getStaticKeyboard(ctx)
         );
     }
 
+    async handleEdit(ctx) {
+        if (ctx.editedMessage.text &&
+            ctx.editedMessage.message_id === ctx.session.newsData.textMessageId) {
+
+            if (ctx.editedMessage.text.length > MAX_TEXT_LENGTH) {
+                return ctx.reply(
+                    `Текст превышает ${MAX_TEXT_LENGTH} символов. Сократите сообщение.`,
+                    this.getStaticKeyboard(ctx)
+                );
+            }
+
+            ctx.session.newsData.text = ctx.editedMessage.text;
+            await ctx.reply(
+                'Текст новости обновлен.',
+                this.getStaticKeyboard(ctx)
+            );
+        }
+    }
+
+    // async handleDelete(ctx) {
+    //     if (ctx.message.message_id === ctx.session.newsData.textMessageId) {
+    //         ctx.session.newsData.text = null;
+    //         ctx.session.newsData.textMessageId = null;
+    //         await ctx.reply(
+    //             'Текст новости удален.',
+    //             this.getStaticKeyboard(ctx)
+    //         );
+    //     }
+
+    //     ctx.session.newsData.files = ctx.session.newsData.files.filter(
+    //         file => file.messageId !== ctx.message.message_id
+    //     );
+    // }
+
     async handleSend(ctx) {
         if (!ctx.session.newsData.text) {
-            return ctx.reply('Необходимо добавить текст новости!');
+            return ctx.reply(
+                'Необходимо добавить текст новости!',
+                this.getStaticKeyboard(ctx)
+            );
         }
 
         try {
@@ -176,14 +211,14 @@ class NewsScene {
                 newsText: ctx.session.newsData.text,
                 template: ctx.session.newsData.isTemplate
             });
-            
+
             if (ctx.session.newsData.files.length > 0) {
                 const filesData = ctx.session.newsData.files.map(file => ({
                     news_id: newsId,
                     file_id: file.fileId,
                     type: file.fileType
                 }));
-                
+
                 await NewsFiles.insertMultiple(filesData);
             }
 
@@ -242,7 +277,7 @@ class NewsScene {
                 await NewsChannel.insertMultiple(newsId, selectedChannels);
                 await ctx.reply('Каналы для публикации выбраны');
             }
-            
+
             return ctx.scene.enter(ctx.session.user.status === 'admin' ? 'ADMIN_MENU_SCENE' : 'MAIN_MENU_SCENE');
         } catch (error) {
             console.error('Error saving channel selection:', error);

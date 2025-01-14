@@ -22,7 +22,7 @@ class InfoScene {
             [Markup.button.callback('Ценности', 'values')],
             [Markup.button.callback('Кодекс делового поведения и этики', 'code')],
             [Markup.button.callback('Информация о компании', 'info')],
-            [Markup.button.callback('В меню', 'menu')]
+            [Markup.button.callback('В главное меню', 'menu')]
         ]);
 
         await sendMessage(ctx, { 
@@ -34,7 +34,7 @@ class InfoScene {
     async showMission(ctx) {
         const keyboard = Markup.inlineKeyboard([
             [Markup.button.callback('Назад', 'back')],
-            [Markup.button.callback('В меню', 'menu')]
+            [Markup.button.callback('В главное меню', 'menu')]
         ]);
 
         await sendMessage(ctx, { 
@@ -46,7 +46,7 @@ class InfoScene {
     async showValues(ctx) {
         const keyboard = Markup.inlineKeyboard([
             [Markup.button.callback('Назад', 'back')],
-            [Markup.button.callback('В меню', 'menu')]
+            [Markup.button.callback('В главное меню', 'menu')]
         ]);
 
         await sendMessage(ctx, { 
@@ -58,7 +58,7 @@ class InfoScene {
     async showCode(ctx) {
         const keyboard = Markup.inlineKeyboard([
             [Markup.button.callback('Назад', 'back')],
-            [Markup.button.callback('В меню', 'menu')]
+            [Markup.button.callback('В главное меню', 'menu')]
         ]);
 
         await sendMessage(ctx, { 
@@ -70,7 +70,7 @@ class InfoScene {
     async showInfo(ctx) {
         const keyboard = Markup.inlineKeyboard([
             [Markup.button.callback('Назад', 'back')],
-            [Markup.button.callback('В меню', 'menu')]
+            [Markup.button.callback('В главное меню', 'menu')]
         ]);
 
         await sendMessage(ctx, { 
