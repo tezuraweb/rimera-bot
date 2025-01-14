@@ -16,6 +16,7 @@ const launchWebpage = () => {
 
         app.set('view engine', 'njk');
 
+        app.set('trust proxy', 1);
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
         app.use(cookieParser());
