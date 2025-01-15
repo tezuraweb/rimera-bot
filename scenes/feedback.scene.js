@@ -43,7 +43,7 @@ class FeedbackScene {
             };
 
             const keyboard = Markup.inlineKeyboard([
-                [Markup.button.callback('📝 Следующее обращение', 'next_appeal')],
+                [Markup.button.callback('📝 Показать обращения', 'next_appeal')],
                 [Markup.button.callback('⬅️ Назад', 'back')]
             ]);
 
@@ -110,7 +110,6 @@ class FeedbackScene {
             ctx.session.feedback.appeals[ctx.session.feedback.currentAppeal];
 
         const keyboard = Markup.inlineKeyboard([
-            [Markup.button.callback('📤 Отправить ответ', 'send_feedback')],
             [Markup.button.callback('⬅️ Назад', 'back')]
         ]);
 

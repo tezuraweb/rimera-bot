@@ -61,7 +61,6 @@ async function sendAppealNotification(appealData, userData) {
         console.log('Appeal notification email sent successfully');
     } catch (error) {
         console.error('Error sending appeal notification email:', error);
-        throw error;
     }
 }
 

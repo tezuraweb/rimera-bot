@@ -31,7 +31,6 @@ class NewsScene {
         scene.action('complete_channels', this.handleCompleteChannels.bind(this));
         scene.action(/select_channel_\d+/, this.handleChannelSelection.bind(this));
         scene.on('edited_message', this.handleEdit.bind(this));
-        // scene.on('message_delete', this.handleDelete.bind(this));
 
         return scene;
     }
@@ -182,21 +181,6 @@ class NewsScene {
             );
         }
     }
-
-    // async handleDelete(ctx) {
-    //     if (ctx.message.message_id === ctx.session.newsData.textMessageId) {
-    //         ctx.session.newsData.text = null;
-    //         ctx.session.newsData.textMessageId = null;
-    //         await ctx.reply(
-    //             'Текст новости удален.',
-    //             this.getStaticKeyboard(ctx)
-    //         );
-    //     }
-
-    //     ctx.session.newsData.files = ctx.session.newsData.files.filter(
-    //         file => file.messageId !== ctx.message.message_id
-    //     );
-    // }
 
     async handleSend(ctx) {
         if (!ctx.session.newsData.text) {

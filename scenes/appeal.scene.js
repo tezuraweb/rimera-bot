@@ -27,7 +27,6 @@ class AppealScene {
         scene.on('text', this.handleText.bind(this));
         scene.on(['photo', 'video'], this.handleMedia.bind(this));
         scene.on('edited_message', this.handleEdit.bind(this));
-        // scene.on('message_delete', this.handleDelete.bind(this));
 
         return scene;
     }
@@ -201,21 +200,6 @@ class AppealScene {
             );
         }
     }
-
-    // async handleDelete(ctx) {
-    //     if (ctx.message.message_id === ctx.session.appealData.textMessageId) {
-    //         ctx.session.appealData.text = null;
-    //         ctx.session.appealData.textMessageId = null;
-    //         await ctx.reply(
-    //             'Текст обращения удален.',
-    //             this.getStaticKeyboard(ctx)
-    //         );
-    //     }
-
-    //     ctx.session.appealData.files = ctx.session.appealData.files.filter(
-    //         file => file.messageId !== ctx.message.message_id
-    //     );
-    // }
 
     async handleSend(ctx) {
         if (!ctx.session.appealData.text) {
