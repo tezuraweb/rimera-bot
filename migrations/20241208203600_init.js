@@ -2,117 +2,87 @@
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.up = function(knex) {
-    return knex.schema
-        // Organizations table
-        .createTable('organizations', table => {
-            table.increments('id').primary();
-            table.string('name').notNullable();
-            table.string('outer_id');
-            table.timestamps(true, true);
-        })
+exports.up = async function (knex) {
+    // First, create temporary columns
+    await knex.schema.alterTable('users', table => {
+        table.string('tgchat_new');
+        table.string('gender_new');
+    });
 
-        // Departments table
-        .createTable('departments', table => {
-            table.increments('id').primary();
-            table.string('name').notNullable();
-            table.integer('parent_id').unsigned().references('id').inTable('departments');
-            table.string('outer_id');
-            table.timestamps(true, true);
-        })
+    // Convert tgchat bigint to string and normalize gender values
+    await knex.raw(`
+        UPDATE users 
+        SET 
+            tgchat_new = tgchat::text,
+            gender_new = CASE 
+                WHEN LOWER(gender) = 'm' OR LOWER(gender) = 'м' THEN 'M'
+                WHEN LOWER(gender) = 'f' OR LOWER(gender) = 'ж' THEN 'F'
+                ELSE 'M'
+            END
+        WHERE tgchat IS NOT NULL OR gender IS NOT NULL
+    `);
 
-        // Positions table
-        .createTable('position', table => {
-            table.increments('id').primary();
-            table.string('name').notNullable();
-            table.string('category');
-            table.integer('parent_id').unsigned().references('id').inTable('position');
-            table.string('outer_id');
-            table.timestamps(true, true);
-        })
+    // Drop old columns and rename new ones
+    await knex.schema.alterTable('users', table => {
+        table.dropColumn('tgchat');
+        table.dropColumn('gender');
+    });
 
-        // Users table
-        .createTable('users', table => {
-            table.increments('id').primary();
-            table.string('name').notNullable();
-            table.string('tgid').unique();
-            table.string('tgchat').unique();
-            table.string('phone').unique();
-            table.string('password');
-            table.string('user_outer_id');
-            table.enum('status', ['admin', 'user']).defaultTo('user');
-            table.enum('gender', ['M', 'F']);
-            table.integer('organization').unsigned().references('id').inTable('organizations');
-            table.integer('department').unsigned().references('id').inTable('departments');
-            table.integer('position').unsigned().references('id').inTable('position');
-            table.timestamp('date_of_birth');
-            table.string('auth_phone');
-            table.string('auth_number');
-            table.timestamp('date_of_employment');
-            table.timestamp('date_of_last_transfer');
-            table.timestamp('date_of_last_dismissal');
-            table.string('duty');
-            table.timestamps(true, true);
-        })
+    await knex.schema.alterTable('users', table => {
+        table.renameColumn('tgchat_new', 'tgchat');
+        table.renameColumn('gender_new', 'gender');
+    });
 
-        // News table
-        .createTable('news', table => {
-            table.increments('id').primary();
-            table.text('text').notNullable();
-            table.specificType('files', 'text ARRAY');
-            table.integer('creator').unsigned().references('id').inTable('users');
-            table.boolean('template').defaultTo(false);
-            table.timestamps(true, true);
-        })
+    // Finally, modify gender to be a proper enum
+    await knex.raw(`
+        ALTER TABLE users 
+        ALTER COLUMN gender 
+        TYPE "enum_users_gender" 
+        USING gender::enum_users_gender
+    `);
 
-        // Messages table
-        .createTable('messages', table => {
-            table.increments('id').primary();
-            table.string('name', 100).notNullable();
-            table.string('title', 255).notNullable();
-            table.integer('group_id').notNullable();
-            table.integer('news_id').unsigned().references('id').inTable('news');
-            table.timestamps(true, true);
-        })
-
-        // Mailing table
-        .createTable('mailing', table => {
-            table.increments('id').primary();
-            table.string('name').notNullable();
-            table.specificType('organization_filter', 'integer ARRAY');
-            table.specificType('department_filter', 'integer ARRAY');
-            table.specificType('user_filter', 'integer ARRAY');
-            table.specificType('position_filter', 'integer ARRAY');
-            table.string('gender_filter');
-            table.timestamp('sending_date');
-            table.enum('status', ['pending', 'processing', 'completed', 'failed']).defaultTo('pending');
-            table.specificType('age_filter', 'integer ARRAY');
-            table.integer('creator').unsigned().references('id').inTable('users');
-            table.timestamps(true, true);
-        })
-
-        // Added new table
-        .createTable('appeal', table => {
-            table.increments('id').primary();
-            table.integer('creator').unsigned().references('id').inTable('users');
-            table.text('text');
-            table.string('type');
-            table.timestamps(true, true);
-        });
+    // Messages table
+    await knex.schema.createTable('messages', table => {
+        table.increments('id').primary();
+        table.string('name', 100).notNullable();
+        table.string('title', 255).notNullable();
+        table.integer('group_id').notNullable();
+        table.integer('news_id').unsigned().references('id').inTable('news');
+        table.timestamps(true, true);
+    });
 };
 
 /**
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.down = function(knex) {
+exports.down = async function (knex) {
+    // Create temporary columns
+    await knex.schema.alterTable('users', table => {
+        table.bigInteger('tgchat_old');
+        table.string('gender_old');
+    });
+
+    // Convert data back
+    await knex.raw(`
+        UPDATE users 
+        SET 
+            tgchat_old = tgchat::bigint,
+            gender_old = gender::text
+        WHERE tgchat IS NOT NULL OR gender IS NOT NULL
+    `);
+
+    // Drop new columns and rename old ones back
+    await knex.schema.alterTable('users', table => {
+        table.dropColumn('tgchat');
+        table.dropColumn('gender');
+    });
+
+    await knex.schema.alterTable('users', table => {
+        table.renameColumn('tgchat_old', 'tgchat');
+        table.renameColumn('gender_old', 'gender');
+    });
+
     return knex.schema
-        .dropTableIfExists('appeal')
-        .dropTableIfExists('mailing')
         .dropTableIfExists('messages')
-        .dropTableIfExists('news')
-        .dropTableIfExists('users')
-        .dropTableIfExists('departments')
-        .dropTableIfExists('position')
-        .dropTableIfExists('organizations');
 };

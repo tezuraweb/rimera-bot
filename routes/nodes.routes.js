@@ -112,8 +112,9 @@ router.post('/login', asyncHandler(async (req, res) => {
     return res
         .cookie("secretToken", token, { 
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict'
+            // secure: process.env.NODE_ENV === 'production',
+            // sameSite: 'strict',
+            secure: false,
         })
         .redirect('/news');
 }));
