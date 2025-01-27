@@ -6,7 +6,7 @@ exports.up = async function (knex) {
     // First, create temporary columns
     await knex.schema.alterTable('users', table => {
         table.string('tgchat_new');
-        table.string('gender_new');
+        table.enum('gender_new', ['M', 'F']);
     });
 
     // Convert tgchat bigint to string and normalize gender values
@@ -32,14 +32,6 @@ exports.up = async function (knex) {
         table.renameColumn('tgchat_new', 'tgchat');
         table.renameColumn('gender_new', 'gender');
     });
-
-    // Finally, modify gender to be a proper enum
-    await knex.raw(`
-        ALTER TABLE users 
-        ALTER COLUMN gender 
-        TYPE "enum_users_gender" 
-        USING gender::enum_users_gender
-    `);
 
     // Messages table
     await knex.schema.createTable('messages', table => {

@@ -11,40 +11,25 @@ services:
       - HOST=0.0.0.0
       - PORT=3000
       - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
-      - DB_HOST=db
+      - DB_HOST=${DB_HOST}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
-      - DB_PORT=5432
+      - DB_PORT=${DB_PORT}
       - SMTP_HOST=${SMTP_HOST}
       - SMTP_PORT=${SMTP_PORT}
       - SMTP_SECURE=${SMTP_SECURE}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
       - SMTP_FROM=${SMTP_FROM}
-    depends_on:
-      - db
     restart: always
 
   nginx:
     image: nginx:alpine
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - app
     restart: always
-
-  db:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: always
-
-volumes:
-  postgres_data:
