@@ -228,10 +228,14 @@ const EmailComponent = () => {
                             <option value="">Выберите тип обращения</option>
                             <option value="appeal_feature">Предложение по улучшению</option>
                             <option value="appeal_problem">Сообщение о проблеме</option>
-                            <option value="appeal_security">Вопрос по безопасности</option>
-                            <option value="appeal_ceo">Обращение к руководству</option>
-                            <option value="appeal_hr">Вопрос по трудоустройству</option>
-                            <option value="appeal_labour">Вопрос по охране труда</option>
+                            <option value="appeal_security">Служба безопасности</option>
+                            <option value="appeal_ceo">Приемная исполнительного директора</option>
+                            <option value="appeal_hr">Дирекция по персоналу</option>
+                            <option value="appeal_labour">Охрана труда</option>
+                            <option value="appeal_youth">Совет молодежи</option>
+                            <option value="appeal_medroom">Медпункт</option>
+                            <option value="appeal_salary">Заработная плата и расчеты</option>
+                            <option value="appeal_workplace">Обслуживание рабочего места</option>
                         </select>
                     </label>
 
@@ -288,7 +292,6 @@ const EmailComponent = () => {
                                 value={userSearchInput}
                                 onChange={handleUserSearch}
                                 onFocus={() => setShowUserList(true)}
-                                required
                             />
                             {showUserList && (
                                 <div className="filter__list">

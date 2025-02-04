@@ -29,6 +29,10 @@ const GROUPS = [
             { name: 'appeal_ceo', title: 'Приемная исполнительного директора' },
             { name: 'appeal_hr', title: 'Дирекция по персоналу' },
             { name: 'appeal_labour', title: 'Охрана труда' },
+            { name: 'appeal_youth', title: 'Совет молодежи' },
+            { name: 'appeal_medroom', title: 'Медпункт' },
+            { name: 'appeal_salary', title: 'Заработная плата и расчеты' },
+            { name: 'appeal_workplace', title: 'Обслуживание рабочего места' },
         ]
     },
     {

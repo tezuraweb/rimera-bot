@@ -11,7 +11,11 @@ const types = {
     appeal_security: 'Вопрос по безопасности',
     appeal_ceo: 'Обращение к руководству',
     appeal_hr: 'Вопрос по трудоустройству',
-    appeal_labour: 'Вопрос по охране труда'
+    appeal_labour: 'Вопрос по охране труда',
+    appeal_youth: 'Совет молодежи',
+    appeal_medroom: 'Медпункт',
+    appeal_salary: 'Заработная плата и расчеты',
+    appeal_workplace: 'Обслуживание рабочего места',
 };
 
 const AppealComponent = () => {

@@ -23,6 +23,10 @@ class AppealScene {
         scene.action('appeal_ceo', this.gotoCeo.bind(this));
         scene.action('appeal_hr', this.gotoHr.bind(this));
         scene.action('appeal_labour', this.gotoLabour.bind(this));
+        scene.action('appeal_youth', this.gotoYouth.bind(this));
+        scene.action('appeal_medroom', this.gotoMedroom.bind(this));
+        scene.action('appeal_salary', this.gotoSalary.bind(this));
+        scene.action('appeal_workplace', this.gotoWorkplace.bind(this));
         scene.action(/org_\d+/, this.handleOrganizationSelection.bind(this));
         scene.on('text', this.handleText.bind(this));
         scene.on(['photo', 'video'], this.handleMedia.bind(this));
@@ -100,6 +104,25 @@ class AppealScene {
 
     async gotoLabour(ctx) {
         this.setContactMessage(ctx, 'appeal_labour');
+    }
+
+    async gotoYouth(ctx) {
+        this.setContactMessage(ctx, 'appeal_youth');
+    }
+
+    async gotoMedroom(ctx) {
+        this.setContactMessage(ctx, 'appeal_medroom');
+    }
+
+    async gotoSalary(ctx) {
+        this.setContactMessage(ctx, 'appeal_salary');
+    }
+
+    async gotoWorkplace(ctx) {
+        await ctx.reply(
+            'Перейдите по ссылке\nhttps://support.rimera.com/1c_work_sd_rimera/hs/lk/',
+            this.getStaticKeyboard(ctx)
+        );
     }
 
     async setContactMessage(ctx, type) {
@@ -262,10 +285,14 @@ class AppealScene {
             const keyboard = orgs ?
                 this.buildOrganizationsKeyboard(ctx.session.appealData.organizations) :
                 Markup.inlineKeyboard([
-                    [Markup.button.callback('Обращение к руководству', 'appeal_ceo')],
-                    [Markup.button.callback('Вопросы по трудоустройству', 'appeal_hr')],
-                    [Markup.button.callback('Вопросы по охране труда', 'appeal_labour')],
-                    [Markup.button.callback('Вопросы по безопасности', 'appeal_security')],
+                    [Markup.button.callback('Cлужба безопасности', 'appeal_security')],
+                    [Markup.button.callback('Приемная исполнительного директора', 'appeal_ceo')],
+                    [Markup.button.callback('Дирекция по персоналу', 'appeal_hr')],
+                    [Markup.button.callback('Охрана труда', 'appeal_labour')],
+                    [Markup.button.callback('Совет молодежи', 'appeal_youth')],
+                    [Markup.button.callback('Медпункт', 'appeal_medroom')],
+                    [Markup.button.callback('Заработная плата и расчеты', 'appeal_salary')],
+                    [Markup.button.callback('Обслуживание рабочего места', 'appeal_workplace')],
                     [Markup.button.callback('⬅️ Назад', 'back')]
                 ]);
 
